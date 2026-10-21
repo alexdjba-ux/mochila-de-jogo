@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mochila de Jogo</title>
+<meta name="description" content="Agenda de jogos, checklist da mochila e custos de viagem para jogadores de airsoft.">
+<meta name="theme-color" content="#eceee6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171a13" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mochila">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
+<style>
+/* Layout: coluna estreita tipo prancheta; agenda de jogos -> ficha do jogo (checklist, custos, detalhes); barra inferior fixa */
+:root{
+  --bg:#eceee6; --card:#f8f9f4; --fg:#22261c; --muted:#646b58; --line:#d3d7c8;
+  --accent:#5b6b2e; --accent-fg:#f4f6ec; --tag:#b86f12; --done:#9aa28a; --soft:#e1e5d4;
+  --display:"Saira Stencil One","Impact",sans-serif;
+  --body:"Barlow",system-ui,sans-serif;
+  --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#171a13; --card:#20241a; --fg:#e4e8d8; --muted:#9aa18a; --line:#333a29;
+  --accent:#a3b85a; --accent-fg:#171a13; --tag:#e0a04a; --done:#5d6450; --soft:#2a3021; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#171a13; --card:#20241a; --fg:#e4e8d8; --muted:#9aa18a; --line:#333a29;
+  --accent:#a3b85a; --accent-fg:#171a13; --tag:#e0a04a; --done:#5d6450; --soft:#2a3021; color-scheme:dark}
+*{box-sizing:border-box}
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px}
+.wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 110px}
+button{font:inherit;cursor:pointer;color:inherit}
+:focus-visible{outline:2px solid var(--tag);outline-offset:2px}
+h1{font-family:var(--display);font-weight:400;font-size:1.9rem;margin:0;letter-spacing:.02em;line-height:1.05;text-wrap:balance}
+h2.sec{font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px}
+.lead{color:var(--muted);margin:8px 0 0;line-height:1.45}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chip{font-family:var(--cond);font-weight:600;font-size:.95rem;letter-spacing:.04em;text-transform:uppercase;border:1px solid var(--line);background:var(--card);padding:7px 12px;border-radius:3px}
+.chip[aria-pressed="true"],.chip.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.chip.danger{background:var(--tag);border-color:var(--tag);color:var(--accent-fg)}
+.pill{font-family:var(--cond);font-weight:600;font-size:.85rem;letter-spacing:.05em;text-transform:uppercase;padding:2px 7px;border-radius:2px;background:var(--soft);color:var(--fg);white-space:nowrap}
+.pill.go{background:var(--accent);color:var(--accent-fg)}
+.pill.warn{background:none;color:var(--tag);border:1px solid var(--tag)}
+.pill.ex{background:none;border:1px dashed var(--muted);color:var(--muted)}
+/* agenda */
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
+.trips{display:flex;flex-direction:column;gap:10px}
+.trip{display:flex;gap:14px;text-align:left;width:100%;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:12px 14px}
+.trip.past{opacity:.75}
+.date{flex:none;width:52px;text-align:center;border-right:1px solid var(--line);padding-right:12px;font-family:var(--cond)}
+.date b{display:block;font-size:1.9rem;line-height:1;font-weight:700;font-variant-numeric:tabular-nums}
+.date span{font-weight:600;letter-spacing:.08em;color:var(--muted);font-size:.85rem}
+.info{flex:1;min-width:0}
+.info h3{margin:0;font-family:var(--cond);font-weight:700;font-size:1.25rem;line-height:1.15}
+.info p{margin:2px 0 6px;color:var(--muted);font-size:.92rem;overflow-wrap:anywhere}
+.meta{display:flex;gap:6px 10px;flex-wrap:wrap;align-items:center;font-family:var(--cond);font-weight:600;font-size:.95rem;font-variant-numeric:tabular-nums;color:var(--muted)}
+.mini{height:4px;background:var(--line);border-radius:2px;margin-top:8px;overflow:hidden}
+.mini i,.bar i{display:block;height:100%;background:var(--accent)}
+.empty{border:1px dashed var(--line);border-radius:4px;padding:18px;color:var(--muted);line-height:1.45}
+details.old summary{cursor:pointer;font-family:var(--cond);font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:26px 0 10px}
+/* ficha do jogo */
+.back{background:none;border:0;padding:0;font-family:var(--cond);font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:10px}
+.sub{color:var(--muted);margin-top:6px;font-family:var(--cond);font-weight:600;font-size:1.05rem;letter-spacing:.02em}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);border-radius:4px;overflow:hidden;margin:16px 0}
+.tabs button{border:0;background:var(--card);padding:10px 4px;font-family:var(--cond);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.tabs button+button{border-left:1px solid var(--line)}
+.tabs button[aria-selected="true"]{background:var(--accent);color:var(--accent-fg)}
+.progress{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--cond);font-weight:600}
+.progress b{font-size:1.3rem;font-variant-numeric:tabular-nums}
+.bar{height:8px;background:var(--line);border-radius:2px;margin:8px 0 6px;overflow:hidden}
+.status{font-family:var(--cond);font-weight:600;color:var(--accent);margin-bottom:12px}
+.status.warn{color:var(--tag)}
+.cats{display:flex;flex-direction:column;gap:12px;margin-top:12px}
+.cat{background:var(--card);border:1px solid var(--line);border-radius:4px}
+.cat summary{list-style:none;display:flex;align-items:center;gap:10px;padding:12px 14px;cursor:pointer}
+.cat summary::-webkit-details-marker{display:none}
+.cat h4{margin:0;font-family:var(--cond);font-weight:700;font-size:1.15rem;letter-spacing:.06em;text-transform:uppercase;flex:1}
+.cat .n{font-family:var(--cond);font-weight:600;font-variant-numeric:tabular-nums;color:var(--muted)}
+.cat.full .n{color:var(--accent)}
+.cat summary::after{content:"";width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);margin-left:4px;transition:transform .2s}
+.cat[open] summary::after{transform:rotate(-135deg)}
+ul{list-style:none;margin:0;padding:0 6px 4px}
+.item{display:flex;align-items:center;gap:12px;padding:10px 8px;border-top:1px solid var(--line)}
+.item input[type=checkbox]{appearance:none;width:24px;height:24px;flex:none;border:2px solid var(--muted);border-radius:3px;display:grid;place-content:center;margin:0;cursor:pointer;background:var(--bg)}
+.item input:checked{background:var(--accent);border-color:var(--accent)}
+.item input:checked::after{content:"";width:6px;height:12px;border-right:3px solid var(--accent-fg);border-bottom:3px solid var(--accent-fg);transform:rotate(45deg) translate(-1px,-1px)}
+.item label,.item .lbl{flex:1;min-width:0;cursor:pointer;line-height:1.3;overflow-wrap:anywhere}
+.item small{display:block;color:var(--muted);font-size:.85rem}
+.item input:checked + label{color:var(--done);text-decoration:line-through}
+.tag{font-family:var(--cond);font-size:.75rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tag);border:1px solid var(--tag);padding:1px 5px;border-radius:2px;margin-left:6px;vertical-align:1px;display:inline-block}
+.del{background:none;border:0;color:var(--muted);font-size:1.3rem;line-height:1;padding:4px 8px}
+.crit{font-family:var(--cond);font-size:.78rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border:1px solid var(--line);background:none;color:var(--muted);padding:3px 6px;border-radius:2px}
+.crit[aria-pressed="true"]{border-color:var(--tag);color:var(--tag)}
+.add{display:flex;gap:8px;padding:10px 8px 10px;border-top:1px solid var(--line)}
+input.txt,textarea,.add input{width:100%;min-width:0;font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:3px;background:var(--bg);color:var(--fg)}
+.add input{flex:1}
+.add button{font-family:var(--cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--accent);color:var(--accent-fg);border:0;border-radius:3px;padding:0 14px}
+.hidedone .item.checked{display:none}
+/* formulários */
+.form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form .full{grid-column:1/-1}
+.f label{display:block;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:.85rem;color:var(--muted);margin-bottom:4px}
+.f .unit{position:relative}
+.f .unit span{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:.85rem;pointer-events:none}
+.f .unit input{padding-right:46px}
+.f .unit.pre span{left:10px;right:auto}
+.f .unit.pre input{padding-left:34px;padding-right:10px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:4px;padding:14px}
+.sum{margin-top:14px;border:2px solid var(--accent);border-radius:4px;padding:14px;background:var(--card)}
+.sum .line{display:flex;justify-content:space-between;gap:10px;padding:5px 0;font-variant-numeric:tabular-nums}
+.sum .line span:first-child{color:var(--muted)}
+.sum .line+.line{border-top:1px solid var(--line)}
+.sum .total{font-family:var(--cond);font-weight:700;font-size:1.5rem;color:var(--fg)}
+.sum .total span:first-child{color:var(--fg)}
+.check{display:flex;gap:8px;align-items:center;font-size:.95rem}
+.check input{width:20px;height:20px;accent-color:var(--accent)}
+.note{color:var(--muted);font-size:.85rem;line-height:1.45;margin-top:10px}
+.danger-zone{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}
+/* barra inferior */
+nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+nav.bottom .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-block:8px}
+nav.bottom button{border:0;background:none;padding:8px;font-family:var(--cond);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-radius:3px}
+nav.bottom button[aria-current="true"]{color:var(--accent);background:var(--soft)}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(76px + env(safe-area-inset-bottom,0px));background:var(--fg);color:var(--bg);padding:8px 14px;border-radius:3px;font-family:var(--cond);font-weight:600;z-index:30}
+@media (max-width:380px){.form{grid-template-columns:1fr}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+<nav class="bottom"><div class="in">
+  <button data-nav="agenda" id="nav-agenda">Jogos</button>
+  <button data-nav="template" id="nav-template">Lista padrão</button>
+</div></nav>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const PWA=true;
+const TEMPLATE=[
+ {id:"arma",name:"Réplica e energia",items:[["Réplica principal","Com ponteira laranja",1],["Réplica secundária / pistola"],["Magazines (mags)","Conte: principal + reserva",1],["Baterias LiPo carregadas","Confira a voltagem",1],["Carregador de bateria"],["Bag antichamas para LiPo"],["Gás green gas / CO2"],["BBs","Bio, no peso que o campo pede",1],["Speedloader"]]},
+ {id:"prot",name:"Proteção",items:[["Óculos ou máscara vedada","Sem eles você não entra",1],["Proteção de boca / rosto"],["Luvas"],["Joelheiras"],["Cotoveleiras"],["Pano antiembaçante / spray"]]},
+ {id:"eqp",name:"Equipamento",items:[["Colete / plate carrier"],["Cinto e coldre"],["Rádio + bateria extra"],["Headset / PTT"],["Braçadeira ou patch do time"],["Dump pouch"],["Lanterna"]]},
+ {id:"roupa",name:"Roupas",items:[["Uniforme / camuflado"],["Bota"],["Meias extras"],["Gorro ou boné"],["Balaclava / shemagh"],["Roupa limpa para voltar"],["Chinelo"],["Saco para roupa suja"]]},
+ {id:"doc",name:"Documentos",items:[["Documento com foto",null,1],["Nota fiscal das réplicas","Para transporte",1],["Confirmação / ingresso do jogo"],["Endereço e horário do campo"],["Dinheiro / cartão para taxa do campo"]]},
+ {id:"manut",name:"Manutenção",items:[["Óleo de silicone"],["Chaves allen / multiferramenta"],["Fita isolante"],["Hop-up e borrachas reserva"],["Vareta de limpeza"],["Fusíveis / conectores reserva"]]},
+ {id:"pess",name:"Pessoal e campo",items:[["Água / hidratação (camelbak)",null,1],["Lanche"],["Protetor solar"],["Repelente"],["Kit de primeiros socorros"],["Remédios pessoais"],["Carregador do celular / power bank"],["Toalha e itens de banho"],["Cadeira ou banquinho"]]},
+ {id:"saida",name:"Antes de sair",items:[["Réplicas na case, descarregadas"],["Baterias desconectadas"],["Combustível / rota conferidos"],["Avisar alguém do horário de volta"]]}
+];
+const KEY="mochila-airsoft-v2", OLD="mochila-airsoft-v1";
+const MES=["JAN","FEV","MAR","ABR","MAI","JUN","JUL","AGO","SET","OUT","NOV","DEZ"];
+const SEM=["domingo","segunda","terça","quarta","quinta","sexta","sábado"];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const brl=v=>v.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+const num=v=>{const n=parseFloat(String(v??"").replace(/\./g,"").replace(",","."));return isFinite(n)?n:0};
+const numDec=v=>{const s=String(v??"").trim();const n=parseFloat(s.includes(",")?s.replace(/\./g,"").replace(",","."):s);return isFinite(n)?n:0};
+function isoPlus(d){const t=new Date();t.setDate(t.getDate()+d);return t.getFullYear()+"-"+String(t.getMonth()+1).padStart(2,"0")+"-"+String(t.getDate()).padStart(2,"0")}
+function parseD(s){if(!s)return null;const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)}
+function daysTo(s){const d=parseD(s);if(!d)return null;const t=new Date();t.setHours(0,0,0,0);return Math.round((d-t)/864e5)}
+
+function defaultTemplate(){return TEMPLATE.map(c=>({id:c.id,name:c.name,items:c.items.map((it,i)=>({id:c.id+":"+i,label:it[0],note:it[1]||"",crit:!!it[2]}))}))}
+function itemsFromTemplate(t){const out=[];t.forEach(c=>c.items.forEach(it=>out.push({id:uid()+it.id,cat:c.id,label:it.label,note:it.note,crit:it.crit,done:false})));return out}
+function emptyCost(){return {km:"",ida:true,consumo:"",preco:"",pedagio:"",pessoas:"1",taxa:"",bbs:"",gas:"",comida:"",hosp:"",outros:""}}
+
+let S=null;
+try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+if(!S||!S.template){
+  S={template:defaultTemplate(),trips:[],view:"agenda",tripId:null,tab:"check",open:{}};
+  // aproveita itens que você adicionou ou removeu na primeira versão
+  try{const o=JSON.parse(localStorage.getItem(OLD));if(o){
+    S.template.forEach(c=>{c.items=c.items.filter(it=>!(o.removed||{})[it.id]);(o.custom?.[c.id]||[]).forEach(x=>c.items.push({id:x.key,label:x.label,note:"",crit:false}))});
+  }}catch(e){}
+  const ex={id:uid(),example:true,name:"Jogo de exemplo",field:"Campo do exemplo",city:"Toque para editar ou apagar",date:isoPlus(17),time:"07:30",notes:"",items:itemsFromTemplate(S.template),
+    cost:{km:"120",ida:true,consumo:"11",preco:"6,29",pedagio:"18",pessoas:"3",taxa:"60",bbs:"45",gas:"",comida:"35",hosp:"",outros:""}};
+  ex.items.slice(0,6).forEach(i=>i.done=true);
+  S.trips.push(ex);
+}
+S.open=S.open||{};S.hideDone=false;
+function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+const trip=()=>S.trips.find(t=>t.id===S.tripId);
+
+function calc(c){
+  const km=numDec(c.km)*(c.ida?2:1), cons=numDec(c.consumo), litros=cons>0?km/cons:0;
+  const comb=litros*numDec(c.preco), ped=numDec(c.pedagio), pes=Math.max(1,Math.round(numDec(c.pessoas))||1);
+  const transp=comb+ped, porPessoa=transp/pes;
+  const ind=["taxa","bbs","gas","comida","hosp","outros"].reduce((a,k)=>a+numDec(c[k]),0);
+  return {km,litros,comb,ped,pes,transp,porPessoa,ind,total:porPessoa+ind};
+}
+function stats(t){const tot=t.items.length,dn=t.items.filter(i=>i.done).length,crit=t.items.filter(i=>i.crit&&!i.done).length;return {tot,dn,crit}}
+function whenPill(d){
+  if(d===null)return `<span class="pill">sem data</span>`;
+  if(d===0)return `<span class="pill go">hoje</span>`;
+  if(d===1)return `<span class="pill go">amanhã</span>`;
+  if(d>1)return `<span class="pill">em ${d} dias</span>`;
+  return `<span class="pill">há ${-d} ${d===-1?"dia":"dias"}</span>`;
+}
+function dateBlock(s){const d=parseD(s);return d?`<div class="date"><b>${String(d.getDate()).padStart(2,"0")}</b><span>${MES[d.getMonth()]}</span></div>`:`<div class="date"><b>--</b><span>DATA</span></div>`}
+
+const app=document.getElementById("app");
+function render(){
+  document.getElementById("nav-agenda").setAttribute("aria-current",S.view!=="template");
+  document.getElementById("nav-template").setAttribute("aria-current",S.view==="template");
+  if(S.view==="trip"&&trip())renderTrip();else if(S.view==="template")renderTemplate();else{S.view="agenda";renderAgenda()}
+}
+
+function tripCard(t){
+  const d=daysTo(t.date),s=stats(t),c=calc(t.cost);
+  const warn=d!==null&&d>=0&&d<=3&&s.crit?`<span class="pill warn">${s.crit} ${s.crit>1?"críticos":"crítico"} faltando</span>`:"";
+  return `<button class="trip${d!==null&&d<0?" past":""}" data-open="${t.id}">${dateBlock(t.date)}
+   <div class="info"><h3>${esc(t.name)||"Sem nome"}</h3><p>${esc([t.field,t.city].filter(Boolean).join(" · "))||"Campo não informado"}</p>
+   <div class="meta">${t.example?'<span class="pill ex">exemplo</span>':""}${whenPill(d)}${warn}<span>${s.dn}/${s.tot} itens</span>${c.total?`<span>${brl(c.total)}</span>`:""}</div>
+   <div class="mini"><i style="width:${s.tot?s.dn/s.tot*100:0}%"></i></div></div></button>`;
+}
+function renderAgenda(){
+  const sorted=[...S.trips].sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
+  const next=sorted.filter(t=>{const d=daysTo(t.date);return d===null||d>=0});
+  const past=sorted.filter(t=>{const d=daysTo(t.date);return d!==null&&d<0}).reverse();
+  const yearCost=past.concat(next).filter(t=>parseD(t.date)?.getFullYear()===new Date().getFullYear()).reduce((a,t)=>a+calc(t.cost).total,0);
+  app.innerHTML=`<div class="top"><h1>Mochila de Jogo</h1><button class="chip primary" data-act="new">+ Novo jogo</button></div>
+   <p class="lead">${next.length?`${next.length} ${next.length>1?"jogos marcados":"jogo marcado"}`:"Nenhum jogo marcado"}${yearCost?` · ${brl(yearCost)} em jogos este ano`:""}</p>
+   ${installHint()}
+   <h2 class="sec">Próximos jogos</h2>
+   ${next.length?`<div class="trips">${next.map(tripCard).join("")}</div>`:`<div class="empty">Toque em <b>+ Novo jogo</b> para marcar o próximo. Cada jogo ganha um checklist próprio, feito a partir da sua lista padrão.</div>`}
+   ${past.length?`<details class="old"><summary>Jogos anteriores (${past.length})</summary><div class="trips">${past.map(tripCard).join("")}</div></details>`:""}`;
+}
+
+function renderTrip(){
+  const t=trip(),d=parseD(t.date),dd=daysTo(t.date);
+  const sub=d?`${SEM[d.getDay()]}, ${d.getDate()} ${MES[d.getMonth()].toLowerCase()}${t.time?" · "+esc(t.time):""}`:"Sem data";
+  let body="";
+  if(S.tab==="check")body=checkHTML(t);else if(S.tab==="cost")body=costHTML(t);else body=detailsHTML(t);
+  app.innerHTML=`<button class="back" data-act="back">← Jogos</button>
+   <h1 id="tripTitle">${esc(t.name)||"Sem nome"}</h1>
+   <div class="sub">${sub} ${whenPill(dd)}</div>
+   <div class="tabs" role="tablist">
+    <button role="tab" data-tab="check" aria-selected="${S.tab==="check"}">Checklist</button>
+    <button role="tab" data-tab="cost" aria-selected="${S.tab==="cost"}">Custos</button>
+    <button role="tab" data-tab="info" aria-selected="${S.tab==="info"}">Detalhes</button>
+   </div>${body}`;
+  if(S.tab==="cost")updateCost();
+}
+
+function checkHTML(t){
+  const cats=S.template.map(c=>({id:c.id,name:c.name}));
+  t.items.forEach(i=>{if(!cats.find(c=>c.id===i.cat))cats.push({id:i.cat,name:"Outros"})});
+  const groups=cats.map(c=>{
+    const its=t.items.filter(i=>i.cat===c.id);const k=its.filter(i=>i.done).length;
+    const open=S.open[c.id]!==false;
+    return `<details class="cat${its.length&&k===its.length?" full":""}" data-cat="${c.id}" ${open?"open":""}>
+     <summary><h4>${esc(c.name)}</h4><span class="n">${k}/${its.length}</span></summary>
+     <ul>${its.map(i=>`<li class="item${i.done?" checked":""}"><input type="checkbox" id="c-${i.id}" data-check="${i.id}" ${i.done?"checked":""}><label for="c-${i.id}">${esc(i.label)}${i.crit?'<span class="tag">Crítico</span>':""}${i.note?`<small>${esc(i.note)}</small>`:""}</label><button class="del" data-delitem="${i.id}" aria-label="Remover ${esc(i.label)}">×</button></li>`).join("")}</ul>
+     <form class="add" data-additem="${c.id}"><input id="add-${c.id}" placeholder="Adicionar neste jogo…" aria-label="Novo item em ${esc(c.name)}" maxlength="60"><button>Adicionar</button></form></details>`;
+  }).join("");
+  return `<div id="progress"></div>
+   <div class="row"><button class="chip" data-act="hidedone" aria-pressed="${S.hideDone}">Só pendentes</button><button class="chip" data-act="uncheck">Desmarcar tudo</button></div>
+   <div class="row" id="uncheckConfirm" hidden style="margin-top:10px">Desmarcar todos os itens deste jogo? <button class="chip danger" data-act="uncheckYes">Desmarcar</button><button class="chip" data-act="uncheckNo">Cancelar</button></div>
+   <div class="cats${S.hideDone?" hidedone":""}" id="cats">${groups}</div>`;
+}
+function updateProgress(){
+  const t=trip(),el=document.getElementById("progress");if(!t||!el)return;
+  const s=stats(t);
+  const msg=s.tot&&s.dn===s.tot?"Tudo na mochila. Bom jogo!":s.crit?`Faltam ${s.crit} ${s.crit>1?"itens críticos":"item crítico"}`:"Itens críticos prontos";
+  el.innerHTML=`<div class="progress"><span>Na mochila</span><b>${s.dn}/${s.tot}</b></div><div class="bar"><i style="width:${s.tot?s.dn/s.tot*100:0}%"></i></div><div class="status${s.crit?" warn":""}">${msg}</div>`;
+  document.querySelectorAll("#cats details").forEach(d=>{const its=t.items.filter(i=>i.cat===d.dataset.cat),k=its.filter(i=>i.done).length;d.querySelector(".n").textContent=k+"/"+its.length;d.classList.toggle("full",its.length>0&&k===its.length)});
+}
+
+function field(id,label,unit,pre,mode="decimal"){
+  const v=trip().cost[id];
+  return `<div class="f"><label for="k-${id}">${label}</label><div class="unit${pre?" pre":""}"><input class="txt" id="k-${id}" data-cost="${id}" inputmode="${mode}" value="${esc(v)}" placeholder="0"><span>${unit}</span></div></div>`;
+}
+function costHTML(t){
+  return `<h2 class="sec" style="margin-top:4px">Transporte</h2>
+   <div class="box"><div class="form">
+    ${field("km","Distância até o campo","km")}
+    ${field("pessoas","Pessoas no carro","pes.","","numeric")}
+    ${field("consumo","Consumo do carro","km/l")}
+    ${field("preco","Preço do litro","R$",1)}
+    <div class="full">${field("pedagio","Pedágios (total)","R$",1)}</div>
+    <label class="check full"><input type="checkbox" id="k-ida" data-cost="ida" ${t.cost.ida?"checked":""}> Contar ida e volta</label>
+   </div><p class="note">Combustível e pedágio são divididos entre as pessoas do carro.</p></div>
+   <h2 class="sec">Seus gastos</h2>
+   <div class="box"><div class="form">
+    ${field("taxa","Taxa do campo","R$",1)}
+    ${field("bbs","BBs","R$",1)}
+    ${field("gas","Gás / CO2","R$",1)}
+    ${field("comida","Alimentação","R$",1)}
+    ${field("hosp","Hospedagem","R$",1)}
+    ${field("outros","Outros","R$",1)}
+   </div></div>
+   <div class="sum" id="sum"></div>
+   <div class="row" style="margin-top:12px"><button class="chip" data-act="copy">Copiar resumo para o grupo</button></div>`;
+}
+function updateCost(){
+  const t=trip(),el=document.getElementById("sum");if(!t||!el)return;const c=calc(t.cost);
+  el.innerHTML=`<div class="line"><span>Combustível${c.litros?` · ${c.litros.toLocaleString("pt-BR",{maximumFractionDigits:1})} L para ${c.km.toLocaleString("pt-BR")} km`:""}</span><span>${brl(c.comb)}</span></div>
+   <div class="line"><span>Pedágios</span><span>${brl(c.ped)}</span></div>
+   <div class="line"><span>Transporte por pessoa (÷${c.pes})</span><span>${brl(c.porPessoa)}</span></div>
+   <div class="line"><span>Seus gastos no jogo</span><span>${brl(c.ind)}</span></div>
+   <div class="line total"><span>Seu custo total</span><span>${brl(c.total)}</span></div>`;
+}
+function resumo(t){
+  const c=calc(t.cost),d=parseD(t.date);
+  return [`🎯 ${t.name||"Jogo de airsoft"}`,
+    d?`📅 ${SEM[d.getDay()]}, ${d.toLocaleDateString("pt-BR")}${t.time?" às "+t.time:""}`:"",
+    t.field||t.city?`📍 ${[t.field,t.city].filter(Boolean).join(" - ")}`:"",
+    c.transp?`🚗 Transporte: ${brl(c.transp)} total, ${brl(c.porPessoa)} por pessoa (${c.pes})`:"",
+    numDec(t.cost.taxa)?`🎟️ Taxa do campo: ${brl(numDec(t.cost.taxa))}`:"",
+    t.notes?`📝 ${t.notes}`:""].filter(Boolean).join("\n");
+}
+
+function detailsHTML(t){
+  return `<div class="box"><div class="form">
+    <div class="f full"><label for="d-name">Nome do jogo</label><input class="txt" id="d-name" data-info="name" value="${esc(t.name)}" maxlength="60" placeholder="Ex.: Operação Mata Fechada"></div>
+    <div class="f full"><label for="d-field">Campo</label><input class="txt" id="d-field" data-info="field" value="${esc(t.field)}" maxlength="60" placeholder="Nome do campo ou organização"></div>
+    <div class="f full"><label for="d-city">Cidade / endereço</label><input class="txt" id="d-city" data-info="city" value="${esc(t.city)}" maxlength="100"></div>
+    <div class="f"><label for="d-date">Data</label><input class="txt" type="date" id="d-date" data-info="date" value="${esc(t.date)}"></div>
+    <div class="f"><label for="d-time">Horário</label><input class="txt" type="time" id="d-time" data-info="time" value="${esc(t.time)}"></div>
+    <div class="f full"><label for="d-notes">Observações</label><textarea id="d-notes" data-info="notes" rows="4" placeholder="Regras de FPS, ponto de encontro, quem vai de carona…">${esc(t.notes)}</textarea></div>
+   </div></div>
+   <div class="danger-zone"><div class="row"><button class="chip" data-act="dup">Duplicar jogo</button><button class="chip" data-act="delTrip">Apagar jogo</button></div>
+   <div class="row" id="delConfirm" hidden style="margin-top:10px">Apagar este jogo e o checklist dele? <button class="chip danger" data-act="delYes">Apagar</button><button class="chip" data-act="delNo">Cancelar</button></div></div>`;
+}
+
+function renderTemplate(){
+  app.innerHTML=`<h1>Lista padrão</h1>
+   <p class="lead">Todo jogo novo começa com esta lista. Mudanças aqui não alteram jogos já criados. Marque como <b>crítico</b> o que te impede de jogar se ficar em casa.</p>
+   <div class="cats">${S.template.map(c=>`<details class="cat" data-tcat="${c.id}" ${S.open["t-"+c.id]?"open":""}>
+     <summary><h4>${esc(c.name)}</h4><span class="n">${c.items.length}</span></summary>
+     <ul>${c.items.map(i=>`<li class="item"><span class="lbl">${esc(i.label)}${i.note?`<small>${esc(i.note)}</small>`:""}</span><button class="crit" data-tcrit="${c.id}|${i.id}" aria-pressed="${i.crit}">Crítico</button><button class="del" data-tdel="${c.id}|${i.id}" aria-label="Remover ${esc(i.label)}">×</button></li>`).join("")}</ul>
+     <form class="add" data-tadd="${c.id}"><input id="tadd-${c.id}" placeholder="Adicionar item…" aria-label="Novo item em ${esc(c.name)}" maxlength="60"><button>Adicionar</button></form></details>`).join("")}</div>
+   <h2 class="sec">Backup dos dados</h2>
+   <div class="box"><p class="note" style="margin-top:0">${PWA?"Salve uma cópia dos seus jogos e listas de vez em quando. Serve também para passar os dados para outro celular.":"Para levar seus jogos para o app instalado, toque em <b>Copiar dados</b> e cole no app, em Lista padrão → Backup."}</p>
+    <div class="row">${PWA?'<button class="chip primary" data-act="export">Salvar backup</button>':""}<button class="chip${PWA?"":" primary"}" data-act="copyData">Copiar dados</button>${PWA?'<label class="chip" for="importFile">Abrir arquivo</label><input type="file" id="importFile" accept=".json,application/json" hidden>':""}</div>
+    ${PWA?`<textarea id="importText" rows="3" placeholder="Ou cole aqui os dados copiados" style="margin-top:10px"></textarea>
+    <div class="row" style="margin-top:8px"><button class="chip" data-act="importPaste">Importar dados colados</button></div>
+    <div class="row" id="importConfirm" hidden style="margin-top:10px"><span id="importInfo"></span> <button class="chip danger" data-act="importYes">Substituir</button><button class="chip" data-act="importNo">Cancelar</button></div>`:""}
+   </div>
+   <div class="danger-zone"><button class="chip" data-act="resetTpl">Restaurar lista original</button>
+   <div class="row" id="tplConfirm" hidden style="margin-top:10px">Voltar a lista padrão para a original? <button class="chip danger" data-act="tplYes">Restaurar</button><button class="chip" data-act="tplNo">Cancelar</button></div></div>`;
+}
+
+let toastT;
+function toast(m){const el=document.getElementById("toast");el.textContent=m;el.hidden=false;clearTimeout(toastT);toastT=setTimeout(()=>el.hidden=true,2200)}
+function go(view,extra){Object.assign(S,{view},extra||{});save();render();window.scrollTo(0,0)}
+
+document.addEventListener("click",e=>{
+  const b=e.target.closest("button");if(!b)return;
+  if(b.dataset.nav)return go(b.dataset.nav);
+  if(b.dataset.open)return go("trip",{tripId:b.dataset.open,tab:"check"});
+  if(b.dataset.tab){S.tab=b.dataset.tab;save();render();return}
+  if(b.dataset.delitem){const t=trip();t.items=t.items.filter(i=>i.id!==b.dataset.delitem);save();b.closest("li").remove();updateProgress();return}
+  if(b.dataset.tcrit){const [c,i]=b.dataset.tcrit.split("|");const it=S.template.find(x=>x.id===c).items.find(x=>x.id===i);it.crit=!it.crit;b.setAttribute("aria-pressed",it.crit);save();return}
+  if(b.dataset.tdel){const [c,i]=b.dataset.tdel.split("|");const cat=S.template.find(x=>x.id===c);cat.items=cat.items.filter(x=>x.id!==i);save();renderTemplate();return}
+  const a=b.dataset.act,show=(id,v)=>{const el=document.getElementById(id);if(el)el.hidden=!v};
+  switch(a){
+    case "back":return go("agenda");
+    case "new":{const t={id:uid(),name:"",field:"",city:"",date:isoPlus(7),time:"",notes:"",items:itemsFromTemplate(S.template),cost:emptyCost()};S.trips.push(t);return go("trip",{tripId:t.id,tab:"info"})}
+    case "hidedone":S.hideDone=!S.hideDone;b.setAttribute("aria-pressed",S.hideDone);document.getElementById("cats").classList.toggle("hidedone",S.hideDone);return;
+    case "uncheck":return show("uncheckConfirm",1);
+    case "uncheckNo":return show("uncheckConfirm",0);
+    case "uncheckYes":trip().items.forEach(i=>i.done=false);save();renderTrip();updateProgress();return;
+    case "delTrip":return show("delConfirm",1);
+    case "delNo":return show("delConfirm",0);
+    case "delYes":S.trips=S.trips.filter(t=>t.id!==S.tripId);S.tripId=null;toast("Jogo apagado");return go("agenda");
+    case "dup":{const o=trip(),t=JSON.parse(JSON.stringify(o));t.id=uid();t.example=false;t.name=(o.name||"Jogo")+" (cópia)";t.date=isoPlus(7);t.items.forEach(i=>{i.done=false;i.id=uid()+i.cat});S.trips.push(t);toast("Jogo duplicado");return go("trip",{tripId:t.id,tab:"info"})}
+    case "copy":{const txt=resumo(trip());const done=()=>toast("Resumo copiado");
+      try{navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt))}catch(err){fallbackCopy(txt)}return}
+    case "resetTpl":return show("tplConfirm",1);
+    case "tplNo":return show("tplConfirm",0);
+    case "tplYes":S.template=defaultTemplate();save();renderTemplate();toast("Lista restaurada");return;
+    case "copyData":{const txt=backupText();try{navigator.clipboard.writeText(txt).then(()=>toast("Dados copiados"),()=>showData(txt))}catch(err){showData(txt)}return}
+    case "export":return exportBackup();
+    case "importPaste":return askImport(document.getElementById("importText").value);
+    case "importNo":pendingImport=null;return show("importConfirm",0);
+    case "importYes":if(pendingImport){S=Object.assign({view:"agenda",tripId:null,tab:"check",open:{}},pendingImport);S.hideDone=false;pendingImport=null;save();toast("Backup importado");go("agenda")}return;
+    case "install":if(installEvt){installEvt.prompt();installEvt.userChoice.finally(()=>{installEvt=null;render()})}return;
+  }
+});
+function backupText(){const {view,tripId,tab,hideDone,...data}=S;return JSON.stringify({app:"mochila-de-jogo",versao:2,salvoEm:new Date().toISOString(),...data})}
+function showData(txt){const ta=document.createElement("textarea");ta.value=txt;ta.rows=4;ta.readOnly=true;ta.style.marginTop="10px";document.querySelector("[data-act=copyData]").closest(".box").append(ta);ta.focus();ta.select();toast("Selecione e copie o texto")}
+let pendingImport=null;
+function askImport(txt){
+  let d;try{d=JSON.parse(String(txt).trim())}catch(e){return toast("Não reconheci esses dados. Cole o texto completo do backup.")}
+  if(!d||!Array.isArray(d.trips)||!Array.isArray(d.template))return toast("Esse texto não é um backup do Mochila de Jogo.");
+  pendingImport={template:d.template,trips:d.trips,open:d.open||{}};
+  document.getElementById("importInfo").textContent=`Backup com ${d.trips.length} ${d.trips.length===1?"jogo":"jogos"}. Substituir os dados atuais?`;
+  const el=document.getElementById("importConfirm");el.hidden=false;el.scrollIntoView({block:"center"});
+}
+async function exportBackup(){
+  const name="mochila-de-jogo-backup-"+isoPlus(0)+".json";
+  const file=new File([backupText()],name,{type:"application/json"});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"Backup Mochila de Jogo"});return}}catch(e){if(e.name==="AbortError")return}
+  const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Backup salvo em Downloads");
+}
+document.addEventListener("change",e=>{if(e.target.id==="importFile"&&e.target.files[0]){e.target.files[0].text().then(askImport);e.target.value=""}});
+let installEvt=null;
+function fallbackCopy(txt){
+  const box=document.getElementById("sum");const ta=document.createElement("textarea");ta.value=txt;ta.rows=6;ta.style.marginTop="12px";ta.readOnly=true;
+  box.after(ta);ta.focus();ta.select();toast("Selecione e copie o texto abaixo");
+}
+document.addEventListener("change",e=>{
+  const el=e.target;
+  if(el.dataset.check){const it=trip().items.find(i=>i.id===el.dataset.check);it.done=el.checked;el.closest("li").classList.toggle("checked",el.checked);save();updateProgress();return}
+  if(el.dataset.cost==="ida"){trip().cost.ida=el.checked;save();updateCost()}
+});
+document.addEventListener("input",e=>{
+  const el=e.target,t=trip();
+  if(el.dataset.cost&&el.dataset.cost!=="ida"){t.cost[el.dataset.cost]=el.value;save();updateCost();return}
+  if(el.dataset.info){t[el.dataset.info]=el.value;if(t.example)t.example=false;save();
+    if(el.dataset.info==="name")document.getElementById("tripTitle").textContent=el.value||"Sem nome";}
+});
+document.addEventListener("focusout",e=>{if(e.target.dataset?.info==="date"||e.target.dataset?.info==="time")renderTrip()});
+document.addEventListener("submit",e=>{
+  e.preventDefault();const f=e.target,inp=f.querySelector("input"),v=inp.value.trim();if(!v)return;
+  if(f.dataset.additem){trip().items.push({id:uid(),cat:f.dataset.additem,label:v,note:"",crit:false,done:false});save();renderTrip();updateProgress();document.getElementById("add-"+f.dataset.additem)?.focus()}
+  if(f.dataset.tadd){S.template.find(c=>c.id===f.dataset.tadd).items.push({id:uid(),label:v,note:"",crit:false});save();renderTemplate();document.getElementById("tadd-"+f.dataset.tadd)?.focus()}
+});
+document.addEventListener("toggle",e=>{
+  const d=e.target;if(d.dataset?.cat){S.open[d.dataset.cat]=d.open;save()}if(d.dataset?.tcat){S.open["t-"+d.dataset.tcat]=d.open;save()}
+},true);
+const _rt=renderTrip;renderTrip=function(){_rt();if(S.tab==="check")updateProgress()};
+function installHint(){
+  if(!PWA)return "";
+  const standalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone;
+  if(standalone)return "";
+  if(installEvt)return `<div class="box row" style="margin-top:14px;justify-content:space-between"><span>Instale o app para abrir sem internet.</span><button class="chip primary" data-act="install">Instalar app</button></div>`;
+  if(/iphone|ipad|ipod/i.test(navigator.userAgent))return `<div class="box" style="margin-top:14px">Para instalar no iPhone: toque em <b>Compartilhar</b> e depois em <b>Adicionar à Tela de Início</b>.</div>`;
+  return "";
+}
+if(PWA){
+  addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;if(S.view==="agenda")render()});
+  addEventListener("appinstalled",()=>{installEvt=null;toast("App instalado");render()});
+  if("serviceWorker" in navigator){
+    const hadController=!!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register("sw.js").catch(()=>{});
+    navigator.serviceWorker.addEventListener("controllerchange",()=>{if(hadController)toast("App atualizado para a versão mais nova")});
+  }
+  try{navigator.storage?.persist?.()}catch(e){}
+}
+render();
+</script>
+</body>
+</html>
