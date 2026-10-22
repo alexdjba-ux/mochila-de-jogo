@@ -190,8 +190,12 @@ nav.bottom button[aria-current="true"]{color:var(--accent);background:var(--soft
 .acct .who .ini{display:grid;place-items:center;background:var(--soft);font-family:var(--cond);font-weight:700;color:var(--fg);font-size:1.1rem}
 .sync{font-size:.85rem;color:var(--accent)}.sync.syncing,.sync.offline{color:var(--muted)}.sync.error{color:var(--tag)}
 .acct.in .chip{justify-self:start}
-.gate{min-height:78vh;display:grid;place-items:center;text-align:center}
-.gate-in{position:relative;overflow:hidden;width:100%;max-width:380px;display:grid;gap:14px;justify-items:center;padding:44px 22px 36px;border:1px solid #2c2c30;border-radius:6px;background:linear-gradient(165deg,#26262a 0%,#0c0c0e 38%,#020203 62%,#111114 100%)}
+#bgscene{position:fixed;inset:0;z-index:-1;background:#050605 url("fundo.jpg") center 65%/cover no-repeat;opacity:0;transition:opacity .35s;pointer-events:none}
+#bgscene::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,6,5,.78) 0%,rgba(5,6,5,.55) 45%,rgba(5,6,5,.45) 100%)}
+body.gated #bgscene,body.home #bgscene{opacity:1}
+body.gated #bgscene::after{background:linear-gradient(180deg,rgba(5,6,5,.55) 0%,rgba(5,6,5,.15) 45%,rgba(5,6,5,.35) 100%)}
+.gate{min-height:70vh;display:grid;place-items:start center;padding-top:9vh;text-align:center}
+.gate-in{position:relative;overflow:hidden;width:100%;max-width:380px;display:grid;gap:14px;justify-items:center;padding:40px 22px 32px;border:1px solid rgba(255,255,255,.14);border-radius:6px;background:linear-gradient(165deg,rgba(38,38,42,.72) 0%,rgba(12,12,14,.72) 38%,rgba(2,2,3,.78) 62%,rgba(17,17,20,.72) 100%);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);box-shadow:0 20px 50px rgba(0,0,0,.5)}
 .gate-in::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.10) 42%,rgba(255,255,255,.02) 50%,rgba(255,255,255,0) 58%)}
 .gate-in>*{position:relative}
 .gate h1{color:#f6f7ef;font-size:2.5rem}
@@ -239,6 +243,7 @@ select.txt{appearance:auto}
   <button data-nav="agenda" id="nav-agenda">Operações</button>
   <button data-nav="template" id="nav-template">Lista padrão</button>
 </div></nav>
+<div id="bgscene" aria-hidden="true"></div>
 <div class="toast" id="toast" hidden></div>
 <div class="scrim" id="scrim" hidden></div>
 <aside class="drawer" id="drawer" aria-label="Viagens" aria-hidden="true"></aside>
@@ -317,7 +322,8 @@ function renderGate(){
   renderGisBtn();
 }
 function render(){
-  if(needGate()){renderGate();return}
+  if(needGate()){document.body.classList.add("gated");document.body.classList.remove("home");renderGate();return}
+  document.body.classList.remove("gated");document.body.classList.toggle("home",!["trip","template","dist","hotel"].includes(S.view));
   document.querySelector("nav.bottom").hidden=false;
   document.getElementById("nav-agenda").setAttribute("aria-current",S.view!=="template");
   document.getElementById("nav-template").setAttribute("aria-current",S.view==="template");
