@@ -300,8 +300,7 @@ function renderAgenda(){
     <button class="qa" data-act="tool" data-tool="hotel"><b>Buscar hotéis</b><small>Perto do campo, na data do jogo</small></button>
    </div>
    ${installHint()}
-   ${next.length?`<h2 class="sec">Próximas operações</h2><div class="trips">${next.map(tripCard).join("")}</div>`:""}
-   ${past.length?`<details class="old"><summary>Operações anteriores (${past.length})</summary><div class="trips">${past.map(tripCard).join("")}</div></details>`:""}`;
+   `;
 }
 
 /* Fundos de camuflagem desenhados na hora (sem imagens externas, funciona offline) */
