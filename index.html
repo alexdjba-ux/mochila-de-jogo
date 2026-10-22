@@ -190,6 +190,8 @@ nav.bottom button[aria-current="true"]{color:var(--accent);background:var(--soft
 .acct .who .ini{display:grid;place-items:center;background:var(--soft);font-family:var(--cond);font-weight:700;color:var(--fg);font-size:1.1rem}
 .sync{font-size:.85rem;color:var(--accent)}.sync.syncing,.sync.offline{color:var(--muted)}.sync.error{color:var(--tag)}
 .acct.in .chip{justify-self:start}
+.gisbtn{min-height:44px;display:flex;justify-content:center}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:.82rem;justify-self:center;padding:2px}
 .hero .acctchip{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;font-family:var(--cond);font-weight:700;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;background:rgba(14,17,10,.5);color:#f4f6ec;border:1px solid rgba(230,234,219,.35);border-radius:3px;padding:5px 9px;max-width:45%;overflow:hidden;white-space:nowrap}
 .hero .acctchip img{width:22px;height:22px;border-radius:50%}
 .vrow .vl small.over{color:var(--tag)}.vrow .vl small.under{color:var(--accent)}
@@ -553,7 +555,7 @@ document.addEventListener("click",e=>{
     case "drawer":return openDrawer();
     case "closeDrawer":return closeDrawer();
     case "login":return doLogin();
-    case "logout":return firebase.auth().signOut().then(()=>toast("Você saiu da conta. As operações continuam neste aparelho."));
+    case "logout":try{google.accounts.id.disableAutoSelect()}catch(e){}return firebase.auth().signOut().then(()=>toast("Você saiu da conta. As operações continuam neste aparelho."));
     case "tool":{closeDrawer();const from=b.dataset.from==="trip"?S.tripId:null;return go(b.dataset.tool,{toolTrip:from,distRes:null,distDest:undefined,hotelCity:undefined,hotelIn:undefined,hotelN:undefined,hotelP:undefined})}
     case "toolBack":return S.toolTrip&&S.trips.find(t=>t.id===S.toolTrip)?go("trip",{tripId:S.toolTrip,tab:"cost"}):go("agenda");
     case "calcDist":return calcDist();
@@ -603,6 +605,7 @@ let installEvt=null;
 /* ===== conta Google + nuvem (Firebase), só no app instalado ===== */
 var FB_CONFIG={apiKey:["AIzaSyAwSfaI8S","_Fa26K9yEiSDJ8Wkva8jbOCo8"].join(""),authDomain:"app-airsoft-ed854.firebaseapp.com",projectId:"app-airsoft-ed854",storageBucket:"app-airsoft-ed854.firebasestorage.app",messagingSenderId:"226930504989",appId:"1:226930504989:web:f207cb20d7c4aaf53c5df4"};
 var FB_VER="10.12.2",fbUser=null,fbDb=null,fbReady=false,syncState="off",lastSync=0,pushTimer=null,unsubCloud=null;
+var GCID="226930504989-lgjo3i4ge4mrgd54jj83htsrvm8sro1p.apps.googleusercontent.com",gisReady=false;
 var GLOGO=`<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 7l7.2 5.6c4.2-3.9 7.1-9.6 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.2-5.6c-2 1.4-4.7 2.3-8.7 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>`;
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.append(s)})}
 const safeParse=t=>{try{const d=JSON.parse(t);return d&&Array.isArray(d.trips)&&Array.isArray(d.template)?d:null}catch(e){return null}};
@@ -615,6 +618,7 @@ async function initCloud(){
   fbDb=firebase.firestore();
   try{await fbDb.enablePersistence({synchronizeTabs:true})}catch(e){}
   fbReady=true;
+  loadScript("https://accounts.google.com/gsi/client").then(()=>{google.accounts.id.initialize({client_id:GCID,callback:onGisCredential,auto_select:false,cancel_on_tap_outside:true,use_fedcm_for_prompt:true,itp_support:true});gisReady=true;refreshAccount()}).catch(()=>{});
   firebase.auth().getRedirectResult().catch(e=>toast(loginErr(e)));
   firebase.auth().onAuthStateChanged(u=>{
     fbUser=u;if(unsubCloud){unsubCloud();unsubCloud=null}
@@ -632,6 +636,8 @@ async function doLogin(){
     if(e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request")toast(loginErr(e));
   }
 }
+function onGisCredential(r){if(!r||!r.credential)return;firebase.auth().signInWithCredential(firebase.auth.GoogleAuthProvider.credential(r.credential)).then(()=>toast("Conectado. Suas operações agora ficam salvas na nuvem.")).catch(e=>toast(loginErr(e)))}
+function renderGisBtn(){const el=document.getElementById("gisBtn");if(!el||!gisReady)return;try{google.accounts.id.renderButton(el,{type:"standard",theme:"filled_black",size:"large",shape:"rectangular",text:"signin_with",logo_alignment:"left",locale:"pt-BR",width:Math.max(200,Math.min(340,el.clientWidth||300))})}catch(e){}}
 function persistLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 function markSynced(){syncState="ok";lastSync=Date.now();persistLocal();refreshAccount()}
 function applyRemote(r){
@@ -671,7 +677,7 @@ function accountHTML(){
   if(!PWA)return "";
   if(!fbUser){
     if(syncState==="unavailable")return `<div class="acct"><span>Para entrar com o Google, abra o app conectado à internet.</span></div>`;
-    return `<div class="acct"><div><b>Salve na nuvem</b><span>Entre com sua conta Google para não perder suas operações e usar em outros aparelhos.</span></div><button class="gbtn" data-act="login">${GLOGO}Entrar com Google</button><span class="fine">Suas operações ficam guardadas no Firebase (Google), ligadas à sua conta. Só você tem acesso.</span></div>`;
+    return `<div class="acct"><div><b>Salve na nuvem</b><span>Entre com sua conta Google para não perder suas operações e usar em outros aparelhos.</span></div>${gisReady?'<div id="gisBtn" class="gisbtn"></div><button class="linkbtn" data-act="login">Não funcionou? Tentar outra forma de entrar</button>':`<button class="gbtn" data-act="login">${GLOGO}Entrar com Google</button>`}<span class="fine">Suas operações ficam guardadas no Firebase (Google), ligadas à sua conta. Só você tem acesso.</span></div>`;
   }
   const hora=lastSync?new Date(lastSync).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):"";
   const st={ok:`Sincronizado${hora?" às "+hora:""}`,syncing:"Sincronizando…",offline:"Sem internet. Sincroniza quando a conexão voltar.",error:"Não consegui sincronizar. Tento de novo na próxima alteração."}[syncState]||"";
@@ -730,6 +736,7 @@ function renderDrawer(){
     <button class="tool" data-act="tool" data-tool="dist"><span>Calcular distância<small>Km e tempo de carro entre cidades</small></span>›</button>
     <button class="tool" data-act="tool" data-tool="hotel"><span>Buscar hotéis<small>Booking, Google e mapa</small></span>›</button>
    </div></div>`;
+  renderGisBtn();
 }
 
 /* ===== ferramenta: distância entre cidades ===== */
