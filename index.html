@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Mochila de Jogo</title>
 <meta name="description" content="Agenda de jogos, checklist da mochila e custos de viagem para jogadores de airsoft.">
-<meta name="theme-color" content="#eceee6" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090a" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#171a13" media="(prefers-color-scheme: dark)">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png" type="image/png">
@@ -18,24 +18,21 @@
 <style>
 /* Layout: coluna estreita tipo prancheta; agenda de jogos -> ficha do jogo (checklist, custos, detalhes); barra inferior fixa */
 :root{
-  --bg:#eceee6; --card:#f8f9f4; --fg:#22261c; --muted:#646b58; --line:#d3d7c8;
-  --accent:#5b6b2e; --accent-fg:#f4f6ec; --tag:#b86f12; --done:#9aa28a; --soft:#e1e5d4;
+  /* black piano: preto profundo, cartões grafite, acentos oliva e âmbar (tema único) */
+  --bg:#09090a; --card:#151517; --fg:#ecebe6; --muted:#9b9a93; --line:#2a2a2e;
+  --accent:#a9bd5f; --accent-fg:#0b0c08; --tag:#e3a24c; --done:#5f5f5a; --soft:#202024;
   --display:"Saira Stencil One","Impact",sans-serif;
   --body:"Barlow",system-ui,sans-serif;
   --cond:"Barlow Condensed","Arial Narrow",sans-serif;
+  color-scheme:dark;
 }
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
-  --bg:#171a13; --card:#20241a; --fg:#e4e8d8; --muted:#9aa18a; --line:#333a29;
-  --accent:#a3b85a; --accent-fg:#171a13; --tag:#e0a04a; --done:#5d6450; --soft:#2a3021; color-scheme:dark}}
-:root[data-theme="dark"]{
-  --bg:#171a13; --card:#20241a; --fg:#e4e8d8; --muted:#9aa18a; --line:#333a29;
-  --accent:#a3b85a; --accent-fg:#171a13; --tag:#e0a04a; --done:#5d6450; --soft:#2a3021; color-scheme:dark}
 *{box-sizing:border-box}
 :root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;-webkit-tap-highlight-color:transparent}
 [hidden]{display:none!important}
-body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:16px}
+body{background:var(--bg) linear-gradient(170deg,#1a1a1d 0%,#09090a 38%,#050506 100%) fixed;color:var(--fg);font-family:var(--body);font-size:16px;min-height:100%}
+.box,.trip,.cat,.qa,.tool,.totals div,.sum,.result,.links a{background-image:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 40%)}
 .wrap{max-width:560px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:18px 110px}
 button{font:inherit;cursor:pointer;color:inherit}
 :focus-visible{outline:2px solid var(--tag);outline-offset:2px}
@@ -54,7 +51,7 @@ h2.sec{font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.1e
 .hero{position:relative;border-radius:6px;overflow:hidden;min-height:350px;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;gap:10px;padding:26px 18px 120px;background:#3a4528 center bottom/cover no-repeat;color:#f4f6ec}
 .hero::before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(14,17,10,.62) 0%,rgba(14,17,10,.35) 45%,rgba(14,17,10,0) 72%)}
 /* black piano: preto brilhante com reflexo diagonal */
-.hero.piano{min-height:0;padding-bottom:58px;background:linear-gradient(165deg,#26262a 0%,#0c0c0e 38%,#020203 62%,#111114 100%)}
+.hero.piano{min-height:0;padding-bottom:34px;border:1px solid #2c2c30;background:linear-gradient(165deg,#26262a 0%,#0c0c0e 38%,#020203 62%,#111114 100%)}
 .hero.piano::before{background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.10) 42%,rgba(255,255,255,.02) 50%,rgba(255,255,255,0) 58%),radial-gradient(120% 60% at 50% 0%,rgba(255,255,255,.08),rgba(255,255,255,0) 60%)}
 .hero.piano::after{content:"";position:absolute;left:0;right:0;top:0;height:1px;background:rgba(255,255,255,.22)}
 .hero .foto{position:absolute;bottom:10px;left:10px;font-family:var(--cond);font-weight:600;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;background:rgba(14,17,10,.45);color:#e6eadb;border:1px solid rgba(230,234,219,.3);border-radius:3px;padding:4px 8px;cursor:pointer}
@@ -139,6 +136,11 @@ input.txt,textarea,.add input{width:100%;min-width:0;font:inherit;font-size:16px
 .check input{width:20px;height:20px;accent-color:var(--accent)}
 .note{color:var(--muted);font-size:.85rem;line-height:1.45;margin-top:10px}
 .danger-zone{margin-top:24px;border-top:1px solid var(--line);padding-top:16px}
+.draft{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;border:1px dashed var(--tag);border-radius:4px;padding:10px 12px;margin-bottom:14px;background:var(--card)}
+.draft b{display:block;font-family:var(--cond);font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--tag)}
+.draft span{color:var(--muted);font-size:.9rem}
+.draft>div{min-width:0;flex:1 1 200px}
+.warnbox{border-style:solid}
 /* barra inferior */
 nav.bottom{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 nav.bottom .in{max-width:560px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-block:8px}
@@ -197,7 +199,7 @@ select.txt{appearance:auto}
 <body>
 <div class="wrap" id="app"></div>
 <nav class="bottom"><div class="in">
-  <button data-nav="agenda" id="nav-agenda">Jogos</button>
+  <button data-nav="agenda" id="nav-agenda">Operações</button>
   <button data-nav="template" id="nav-template">Lista padrão</button>
 </div></nav>
 <div class="toast" id="toast" hidden></div>
@@ -246,6 +248,7 @@ S.trips=S.trips.filter(t=>!t.example);
 S.open=S.open||{};S.hideDone=false;
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
 const trip=()=>S.trips.find(t=>t.id===S.tripId);
+const saved=()=>S.trips.filter(t=>!t.draft);
 
 function calc(c){
   const km=numDec(c.km)*(c.ida?2:1), cons=numDec(c.consumo), litros=cons>0?km/cons:0;
@@ -281,15 +284,15 @@ function tripCard(t){
    <div class="mini"><i style="width:${s.tot?s.dn/s.tot*100:0}%"></i></div></div></button>`;
 }
 function renderAgenda(){
-  const sorted=[...S.trips].sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
+  const sorted=saved().sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
   const next=sorted.filter(t=>{const d=daysTo(t.date);return d===null||d>=0});
   const past=sorted.filter(t=>{const d=daysTo(t.date);return d!==null&&d<0}).reverse();
   const yearCost=past.concat(next).filter(t=>parseD(t.date)?.getFullYear()===new Date().getFullYear()).reduce((a,t)=>a+calc(t.cost).total,0);
-  app.innerHTML=`<section class="hero" id="hero">
-    <button class="menu" data-act="drawer" aria-label="Abrir lista de viagens"><i></i>Viagens</button><button class="swap" data-act="camo" aria-label="Trocar o fundo">${fundos()[camoIdx].nome} ⟳</button><label class="foto" for="heroFoto">Usar foto</label><input type="file" id="heroFoto" accept="image/*" hidden>
+  app.innerHTML=`<section class="hero piano" id="hero">
+    <button class="menu" data-act="drawer" aria-label="Abrir lista de viagens"><i></i>Viagens</button>
     <span class="eyebrow">Airsoft · Operações</span>
     <h1>Mochila de Jogo</h1>
-    <p class="lead">${next.length?`${next.length} ${next.length>1?"jogos marcados":"jogo marcado"}`:"Nenhum jogo marcado"}</p>
+    <p class="lead">${next.length?`${next.length} ${next.length>1?"operações marcadas":"operação marcada"}`:"Nenhuma operação marcada"}</p>
     <button class="cta" data-act="new">+ Nova Operação</button>
    </section>
    <div class="quick">
@@ -297,10 +300,8 @@ function renderAgenda(){
     <button class="qa" data-act="tool" data-tool="hotel"><b>Buscar hotéis</b><small>Perto do campo, na data do jogo</small></button>
    </div>
    ${installHint()}
-   <h2 class="sec">Próximos jogos</h2>
-   ${next.length?`<div class="trips">${next.map(tripCard).join("")}</div>`:`<div class="empty">Toque em <b>+ Nova Operação</b> para marcar o próximo jogo. Cada jogo ganha um checklist próprio, feito a partir da sua lista padrão.</div>`}
-   ${past.length?`<details class="old"><summary>Jogos anteriores (${past.length})</summary><div class="trips">${past.map(tripCard).join("")}</div></details>`:""}`;
-  paintHero();
+   ${next.length?`<h2 class="sec">Próximas operações</h2><div class="trips">${next.map(tripCard).join("")}</div>`:""}
+   ${past.length?`<details class="old"><summary>Operações anteriores (${past.length})</summary><div class="trips">${past.map(tripCard).join("")}</div></details>`:""}`;
 }
 
 /* Fundos de camuflagem desenhados na hora (sem imagens externas, funciona offline) */
@@ -388,7 +389,9 @@ function renderTrip(){
   const sub=d?`${SEM[d.getDay()]}, ${d.getDate()} ${MES[d.getMonth()].toLowerCase()}${t.time?" · "+esc(t.time):""}`:"Sem data";
   let body="";
   if(S.tab==="check")body=checkHTML(t);else if(S.tab==="cost")body=costHTML(t);else body=detailsHTML(t);
-  app.innerHTML=`<button class="back" data-act="back">← Jogos</button>
+  app.innerHTML=`<button class="back" data-act="back">← Operações</button>
+   ${t.draft?`<div class="draft" id="draftBar"><div><b>Rascunho</b><span>Preencha e salve para a operação aparecer na tela principal.</span></div><button class="chip primary" data-act="saveOp">Salvar operação</button></div>
+   <div class="draft warnbox" id="leaveConfirm" hidden><span>Esta operação ainda não foi salva.</span><div class="row"><button class="chip primary" data-act="saveOp">Salvar</button><button class="chip danger" data-act="discardOp">Descartar</button><button class="chip" data-act="stay">Continuar editando</button></div></div>`:""}
    <h1 id="tripTitle">${esc(t.name)||"Sem nome"}</h1>
    <div class="sub">${sub} ${whenPill(dd)}</div>
    <div class="tabs" role="tablist">
@@ -476,7 +479,7 @@ function resumo(t){
 
 function detailsHTML(t){
   return `<div class="box"><div class="form">
-    <div class="f full"><label for="d-name">Nome do jogo</label><input class="txt" id="d-name" data-info="name" value="${esc(t.name)}" maxlength="60" placeholder="Ex.: Operação Mata Fechada"></div>
+    <div class="f full"><label for="d-name">Nome da operação</label><input class="txt" id="d-name" data-info="name" value="${esc(t.name)}" maxlength="60" placeholder="Ex.: Operação Mata Fechada"></div>
     <div class="f full"><label for="d-field">Campo</label><input class="txt" id="d-field" data-info="field" value="${esc(t.field)}" maxlength="60" placeholder="Nome do campo ou organização"></div>
     <div class="f full"><label for="d-city">Cidade / endereço</label><input class="txt" id="d-city" data-info="city" value="${esc(t.city)}" maxlength="100"></div>
     <div class="f"><label for="d-date">Data</label><input class="txt" type="date" id="d-date" data-info="date" value="${esc(t.date)}"></div>
@@ -511,7 +514,7 @@ function go(view,extra){Object.assign(S,{view},extra||{});save();render();window
 
 document.addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
-  if(b.dataset.nav)return go(b.dataset.nav);
+  if(b.dataset.nav){if(leavingDraft(()=>go(b.dataset.nav)))return;return go(b.dataset.nav)}
   if(b.dataset.open){closeDrawer();return go("trip",{tripId:b.dataset.open,tab:b.dataset.tab2||"check"})}
   if(b.dataset.tab){S.tab=b.dataset.tab;save();render();return}
   if(b.dataset.delitem){const t=trip();t.items=t.items.filter(i=>i.id!==b.dataset.delitem);save();b.closest("li").remove();updateProgress();return}
@@ -519,7 +522,13 @@ document.addEventListener("click",e=>{
   if(b.dataset.tdel){const [c,i]=b.dataset.tdel.split("|");const cat=S.template.find(x=>x.id===c);cat.items=cat.items.filter(x=>x.id!==i);save();renderTemplate();return}
   const a=b.dataset.act,show=(id,v)=>{const el=document.getElementById(id);if(el)el.hidden=!v};
   switch(a){
-    case "back":return go("agenda");
+    case "back":if(leavingDraft(()=>go("agenda")))return;return go("agenda");
+    case "saveOp":{const t=trip();if(!t)return;
+      if(!String(t.name||"").trim()){S.tab="info";render();toast("Dê um nome à operação para salvar");document.getElementById("d-name")?.focus();return}
+      if(!t.date){S.tab="info";render();toast("Escolha a data da operação para salvar");return}
+      delete t.draft;save();toast("Operação salva");pendingLeave=null;return go("agenda")}
+    case "discardOp":S.trips=S.trips.filter(x=>x.id!==S.tripId);S.tripId=null;save();toast("Rascunho descartado");{const n=pendingLeave;pendingLeave=null;return n?n():go("agenda")}
+    case "stay":pendingLeave=null;return show("leaveConfirm",0);
     case "drawer":return openDrawer();
     case "closeDrawer":return closeDrawer();
     case "tool":{closeDrawer();const from=b.dataset.from==="trip"?S.tripId:null;return go(b.dataset.tool,{toolTrip:from,distRes:null,distDest:undefined,hotelCity:undefined,hotelIn:undefined,hotelN:undefined,hotelP:undefined})}
@@ -528,7 +537,7 @@ document.addEventListener("click",e=>{
     case "applyKm":{const id=document.getElementById("t-apply").value,t=S.trips.find(x=>x.id===id);if(!t||!S.distRes)return;
       t.cost.km=String(Math.round(S.distRes.km));save();toast(`${Math.round(S.distRes.km)} km aplicados em ${t.name||"jogo sem nome"}`);return go("trip",{tripId:t.id,tab:"cost"})}
     case "camo":camoIdx=(camoIdx+1)%fundos().length;try{localStorage.setItem("mochila-fundo",camoIdx)}catch(err){}b.textContent=fundos()[camoIdx].nome+" ⟳";paintHero();return;
-    case "new":{const t={id:uid(),name:"",field:"",city:"",date:isoPlus(7),time:"",notes:"",items:itemsFromTemplate(S.template),cost:emptyCost()};S.trips.push(t);return go("trip",{tripId:t.id,tab:"info"})}
+    case "new":{const t={id:uid(),draft:true,name:"",field:"",city:"",date:isoPlus(7),time:"",notes:"",items:itemsFromTemplate(S.template),cost:emptyCost()};S.trips.push(t);return go("trip",{tripId:t.id,tab:"info"})}
     case "hidedone":S.hideDone=!S.hideDone;b.setAttribute("aria-pressed",S.hideDone);document.getElementById("cats").classList.toggle("hidedone",S.hideDone);return;
     case "uncheck":return show("uncheckConfirm",1);
     case "uncheckNo":return show("uncheckConfirm",0);
@@ -536,7 +545,7 @@ document.addEventListener("click",e=>{
     case "delTrip":return show("delConfirm",1);
     case "delNo":return show("delConfirm",0);
     case "delYes":S.trips=S.trips.filter(t=>t.id!==S.tripId);S.tripId=null;toast("Jogo apagado");return go("agenda");
-    case "dup":{const o=trip(),t=JSON.parse(JSON.stringify(o));t.id=uid();t.example=false;t.name=(o.name||"Jogo")+" (cópia)";t.date=isoPlus(7);t.items.forEach(i=>{i.done=false;i.id=uid()+i.cat});S.trips.push(t);toast("Jogo duplicado");return go("trip",{tripId:t.id,tab:"info"})}
+    case "dup":{const o=trip(),t=JSON.parse(JSON.stringify(o));t.id=uid();t.draft=true;t.example=false;t.name=(o.name||"Jogo")+" (cópia)";t.date=isoPlus(7);t.items.forEach(i=>{i.done=false;i.id=uid()+i.cat});S.trips.push(t);toast("Jogo duplicado");return go("trip",{tripId:t.id,tab:"info"})}
     case "copy":{const txt=resumo(trip());const done=()=>toast("Resumo copiado");
       try{navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt))}catch(err){fallbackCopy(txt)}return}
     case "resetTpl":return show("tplConfirm",1);
@@ -568,6 +577,12 @@ async function exportBackup(){
 }
 document.addEventListener("change",e=>{if(e.target.id==="importFile"&&e.target.files[0]){e.target.files[0].text().then(askImport);e.target.value=""}});
 let installEvt=null;
+let pendingLeave=null;
+function leavingDraft(next){
+  const t=S.view==="trip"&&trip();if(!t||!t.draft)return false;
+  pendingLeave=next;const el=document.getElementById("leaveConfirm");if(el){el.hidden=false;el.scrollIntoView({block:"center",behavior:"smooth"})}
+  return true;
+}
 
 /* ===== menu lateral: viagens com previsto x realizado ===== */
 let drawerOpen=false;
@@ -588,11 +603,11 @@ function vrow(t,past){
 }
 function renderDrawer(){
   const y=new Date().getFullYear();
-  const sorted=[...S.trips].sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
+  const sorted=saved().sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
   const next=sorted.filter(t=>{const d=daysTo(t.date);return d===null||d>=0});
   const past=sorted.filter(t=>{const d=daysTo(t.date);return d!==null&&d<0}).reverse();
   const ano=t=>parseD(t.date)?.getFullYear()===y;
-  const prevAno=S.trips.filter(ano).reduce((a,t)=>a+calc(t.cost).total,0);
+  const prevAno=saved().filter(ano).reduce((a,t)=>a+calc(t.cost).total,0);
   const feitas=past.filter(t=>ano(t)&&hasReal(t));
   const realAno=feitas.reduce((a,t)=>a+numDec(t.cost.real),0),prevFeitas=feitas.reduce((a,t)=>a+calc(t.cost).total,0),df=realAno-prevFeitas;
   const aRealizar=next.reduce((a,t)=>a+calc(t.cost).total,0);
@@ -617,7 +632,7 @@ function renderDrawer(){
 /* ===== ferramenta: distância entre cidades ===== */
 const toolTrip=()=>S.trips.find(t=>t.id===S.toolTrip);
 const mapsDir=(o,d)=>`https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(o)}&destination=${encodeURIComponent(d)}&travelmode=driving`;
-function upcomingOptions(sel){const ts=[...S.trips].filter(t=>{const d=daysTo(t.date);return d===null||d>=0}).sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
+function upcomingOptions(sel){const ts=saved().filter(t=>{const d=daysTo(t.date);return d===null||d>=0}).sort((a,b)=>(a.date||"9").localeCompare(b.date||"9"));
   return ts.map(t=>`<option value="${t.id}" ${t.id===sel?"selected":""}>${esc(t.name)||"Sem nome"}${t.date?" · "+parseD(t.date).toLocaleDateString("pt-BR"):""}</option>`).join("")}
 function renderDist(){
   const t=toolTrip(),dest=S.distDest??(t?[t.field,t.city].filter(Boolean).join(", "):"");
