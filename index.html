@@ -173,6 +173,11 @@ nav.bottom button[aria-current="true"]{color:var(--accent);background:var(--soft
 .vrow .vl{text-align:right;font-variant-numeric:tabular-nums;font-size:.9rem;line-height:1.3}
 .vrow .vl small{display:block;color:var(--muted);font-size:.75rem}
 .over{color:var(--tag)}.under{color:var(--accent)}
+.vline{display:flex;align-items:stretch;border-top:1px solid var(--line)}
+.vline .vrow{border-top:0;flex:1;min-width:0}
+.vdel{flex:none;background:none;border:0;color:var(--muted);padding:0 4px 0 10px;display:grid;place-items:center}
+.vdel:hover,.vdel:focus-visible{color:var(--tag)}
+.vconfirm{display:grid;gap:8px;padding:6px 2px 12px;font-size:.92rem;line-height:1.4}
 .vrow .vl small.over{color:var(--tag)}.vrow .vl small.under{color:var(--accent)}
 .dempty{color:var(--muted);font-size:.9rem;padding:8px 2px;border-top:1px solid var(--line)}
 .tools{display:grid;gap:8px}
@@ -485,8 +490,8 @@ function detailsHTML(t){
     <div class="f"><label for="d-time">Horário</label><input class="txt" type="time" id="d-time" data-info="time" value="${esc(t.time)}"></div>
     <div class="f full"><label for="d-notes">Observações</label><textarea id="d-notes" data-info="notes" rows="4" placeholder="Regras de FPS, ponto de encontro, quem vai de carona…">${esc(t.notes)}</textarea></div>
    </div></div>
-   <div class="danger-zone"><div class="row"><button class="chip" data-act="dup">Duplicar jogo</button><button class="chip" data-act="delTrip">Apagar jogo</button></div>
-   <div class="row" id="delConfirm" hidden style="margin-top:10px">Apagar este jogo e o checklist dele? <button class="chip danger" data-act="delYes">Apagar</button><button class="chip" data-act="delNo">Cancelar</button></div></div>`;
+   <div class="danger-zone"><div class="row"><button class="chip" data-act="dup">Duplicar jogo</button><button class="chip" data-act="delTrip">Excluir operação</button></div>
+   <div class="row" id="delConfirm" hidden style="margin-top:10px">Excluir esta operação, com checklist e custos? <button class="chip danger" data-act="delYes">Excluir</button><button class="chip" data-act="delNo">Cancelar</button></div></div>`;
 }
 
 function renderTemplate(){
@@ -514,6 +519,9 @@ function go(view,extra){Object.assign(S,{view},extra||{});save();render();window
 document.addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.dataset.nav){if(leavingDraft(()=>go(b.dataset.nav)))return;return go(b.dataset.nav)}
+  if(b.dataset.delask){document.querySelectorAll(".vconfirm").forEach(c=>c.hidden=true);document.querySelector("#vw-"+b.dataset.delask+" .vconfirm").hidden=false;return}
+  if(b.dataset.delno){document.querySelector("#vw-"+b.dataset.delno+" .vconfirm").hidden=true;return}
+  if(b.dataset.delyes){const id=b.dataset.delyes,t=S.trips.find(x=>x.id===id);S.trips=S.trips.filter(x=>x.id!==id);if(S.tripId===id)S.tripId=null;save();toast(`"${t&&t.name||"Operação"}" excluída`);return render()}
   if(b.dataset.open){closeDrawer();return go("trip",{tripId:b.dataset.open,tab:b.dataset.tab2||"check"})}
   if(b.dataset.tab){S.tab=b.dataset.tab;save();render();return}
   if(b.dataset.delitem){const t=trip();t.items=t.items.filter(i=>i.id!==b.dataset.delitem);save();b.closest("li").remove();updateProgress();return}
@@ -543,7 +551,7 @@ document.addEventListener("click",e=>{
     case "uncheckYes":trip().items.forEach(i=>i.done=false);save();renderTrip();updateProgress();return;
     case "delTrip":return show("delConfirm",1);
     case "delNo":return show("delConfirm",0);
-    case "delYes":S.trips=S.trips.filter(t=>t.id!==S.tripId);S.tripId=null;toast("Jogo apagado");return go("agenda");
+    case "delYes":S.trips=S.trips.filter(t=>t.id!==S.tripId);S.tripId=null;toast("Operação excluída");return go("agenda");
     case "dup":{const o=trip(),t=JSON.parse(JSON.stringify(o));t.id=uid();t.draft=true;t.example=false;t.name=(o.name||"Jogo")+" (cópia)";t.date=isoPlus(7);t.items.forEach(i=>{i.done=false;i.id=uid()+i.cat});S.trips.push(t);toast("Jogo duplicado");return go("trip",{tripId:t.id,tab:"info"})}
     case "copy":{const txt=resumo(trip());const done=()=>toast("Resumo copiado");
       try{navigator.clipboard.writeText(txt).then(done,()=>fallbackCopy(txt))}catch(err){fallbackCopy(txt)}return}
@@ -598,7 +606,7 @@ function vrow(t,past){
   if(!past)vl=`${prev?brl(prev):"—"}<small>previsto</small>`;
   else if(hasReal(t))vl=`${brl(real)}<small class="${df>0.005?"over":"under"}">${Math.abs(df)<0.005?"igual ao previsto":(df>0?"+":"−")+brl(Math.abs(df))}</small>`;
   else vl=`${prev?brl(prev):"—"}<small class="over">anotar gasto</small>`;
-  return `<button class="vrow" data-open="${t.id}" data-tab2="${past?"cost":"check"}"><span class="dt">${dt}</span><span class="nm"><b>${esc(t.name)||"Sem nome"}</b><small>${esc(t.city||t.field||"")}${past?` · previsto ${brl(prev)}`:""}</small></span><span class="vl">${vl}</span></button>`;
+  return `<div class="vwrap" id="vw-${t.id}"><div class="vline"><button class="vrow" data-open="${t.id}" data-tab2="${past?"cost":"check"}"><span class="dt">${dt}</span><span class="nm"><b>${esc(t.name)||"Sem nome"}</b><small>${esc(t.city||t.field||"")}${past?` · previsto ${brl(prev)}`:""}</small></span><span class="vl">${vl}</span></button><button class="vdel" data-delask="${t.id}" aria-label="Excluir ${esc(t.name)||"operação"}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button></div><div class="vconfirm" hidden><span>Excluir <b>${esc(t.name)||"esta operação"}</b>? O checklist e os custos dela também serão apagados.</span><div class="row"><button class="chip danger" data-delyes="${t.id}">Excluir</button><button class="chip" data-delno="${t.id}">Cancelar</button></div></div></div>`;
 }
 function renderDrawer(){
   const y=new Date().getFullYear();
