@@ -178,6 +178,20 @@ nav.bottom button[aria-current="true"]{color:var(--accent);background:var(--soft
 .vdel{flex:none;background:none;border:0;color:var(--muted);padding:0 4px 0 10px;display:grid;place-items:center}
 .vdel:hover,.vdel:focus-visible{color:var(--tag)}
 .vconfirm{display:grid;gap:8px;padding:6px 2px 12px;font-size:.92rem;line-height:1.4}
+.acct{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:4px;padding:12px;display:grid;gap:10px}
+.acct b{display:block;font-family:var(--cond);font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.acct span{color:var(--muted);font-size:.88rem;line-height:1.35}
+.acct .fine{font-size:.78rem}
+.gbtn{display:flex;align-items:center;justify-content:center;gap:10px;background:#fff;color:#1f1f1f;border:1px solid #dadce0;border-radius:4px;padding:10px 14px;font-family:var(--body);font-weight:600;font-size:.95rem}
+.acct .who{display:flex;gap:10px;align-items:center;min-width:0}
+.acct .who>div{min-width:0}
+.acct .who span{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.acct img,.acct .ini{width:36px;height:36px;border-radius:50%;flex:none}
+.acct .who .ini{display:grid;place-items:center;background:var(--soft);font-family:var(--cond);font-weight:700;color:var(--fg);font-size:1.1rem}
+.sync{font-size:.85rem;color:var(--accent)}.sync.syncing,.sync.offline{color:var(--muted)}.sync.error{color:var(--tag)}
+.acct.in .chip{justify-self:start}
+.hero .acctchip{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;font-family:var(--cond);font-weight:700;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;background:rgba(14,17,10,.5);color:#f4f6ec;border:1px solid rgba(230,234,219,.35);border-radius:3px;padding:5px 9px;max-width:45%;overflow:hidden;white-space:nowrap}
+.hero .acctchip img{width:22px;height:22px;border-radius:50%}
 .vrow .vl small.over{color:var(--tag)}.vrow .vl small.under{color:var(--accent)}
 .dempty{color:var(--muted);font-size:.9rem;padding:8px 2px;border-top:1px solid var(--line)}
 .tools{display:grid;gap:8px}
@@ -251,7 +265,7 @@ if(!S||!S.template){
 // o jogo de exemplo das versões anteriores sai da lista (se você editou, ele fica)
 S.trips=S.trips.filter(t=>!t.example);
 S.open=S.open||{};S.hideDone=false;
-function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function save(){S.updatedAt=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof schedulePush==="function")schedulePush()}
 const trip=()=>S.trips.find(t=>t.id===S.tripId);
 const saved=()=>S.trips.filter(t=>!t.draft);
 
@@ -294,7 +308,7 @@ function renderAgenda(){
   const past=sorted.filter(t=>{const d=daysTo(t.date);return d!==null&&d<0}).reverse();
   const yearCost=past.concat(next).filter(t=>parseD(t.date)?.getFullYear()===new Date().getFullYear()).reduce((a,t)=>a+calc(t.cost).total,0);
   app.innerHTML=`<section class="hero piano" id="hero">
-    <button class="menu" data-act="drawer" aria-label="Abrir lista de viagens"><i></i>Viagens</button>
+    <button class="menu" data-act="drawer" aria-label="Abrir lista de viagens"><i></i>Viagens</button>${PWA?`<button class="acctchip" id="acctChip" data-act="drawer" aria-label="Conta Google">${chipLabel()}</button>`:""}
     <span class="eyebrow">Airsoft · Operações</span>
     <h1>Mochila de Jogo</h1>
     <p class="lead">${next.length?`${next.length} ${next.length>1?"operações marcadas":"operação marcada"}`:"Nenhuma operação marcada"}</p>
@@ -538,6 +552,8 @@ document.addEventListener("click",e=>{
     case "stay":pendingLeave=null;return show("leaveConfirm",0);
     case "drawer":return openDrawer();
     case "closeDrawer":return closeDrawer();
+    case "login":return doLogin();
+    case "logout":return firebase.auth().signOut().then(()=>toast("Você saiu da conta. As operações continuam neste aparelho."));
     case "tool":{closeDrawer();const from=b.dataset.from==="trip"?S.tripId:null;return go(b.dataset.tool,{toolTrip:from,distRes:null,distDest:undefined,hotelCity:undefined,hotelIn:undefined,hotelN:undefined,hotelP:undefined})}
     case "toolBack":return S.toolTrip&&S.trips.find(t=>t.id===S.toolTrip)?go("trip",{tripId:S.toolTrip,tab:"cost"}):go("agenda");
     case "calcDist":return calcDist();
@@ -584,6 +600,85 @@ async function exportBackup(){
 }
 document.addEventListener("change",e=>{if(e.target.id==="importFile"&&e.target.files[0]){e.target.files[0].text().then(askImport);e.target.value=""}});
 let installEvt=null;
+/* ===== conta Google + nuvem (Firebase), só no app instalado ===== */
+var FB_CONFIG={apiKey:["AIzaSyAwSfaI8S","_Fa26K9yEiSDJ8Wkva8jbOCo8"].join(""),authDomain:"app-airsoft-ed854.firebaseapp.com",projectId:"app-airsoft-ed854",storageBucket:"app-airsoft-ed854.firebasestorage.app",messagingSenderId:"226930504989",appId:"1:226930504989:web:f207cb20d7c4aaf53c5df4"};
+var FB_VER="10.12.2",fbUser=null,fbDb=null,fbReady=false,syncState="off",lastSync=0,pushTimer=null,unsubCloud=null;
+var GLOGO=`<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 7l7.2 5.6c4.2-3.9 7.1-9.6 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.2-5.6c-2 1.4-4.7 2.3-8.7 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>`;
+function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.append(s)})}
+const safeParse=t=>{try{const d=JSON.parse(t);return d&&Array.isArray(d.trips)&&Array.isArray(d.template)?d:null}catch(e){return null}};
+function cloudData(){const {view,tripId,tab,hideDone,distRes,toolTrip,owner,...d}=S;return d}
+async function initCloud(){
+  if(!PWA)return;
+  try{for(const m of ["app","auth","firestore"])await loadScript(`https://www.gstatic.com/firebasejs/${FB_VER}/firebase-${m}-compat.js`)}
+  catch(e){syncState="unavailable";refreshAccount();return}
+  firebase.initializeApp(FB_CONFIG);
+  fbDb=firebase.firestore();
+  try{await fbDb.enablePersistence({synchronizeTabs:true})}catch(e){}
+  fbReady=true;
+  firebase.auth().getRedirectResult().catch(e=>toast(loginErr(e)));
+  firebase.auth().onAuthStateChanged(u=>{
+    fbUser=u;if(unsubCloud){unsubCloud();unsubCloud=null}
+    if(u){syncState="syncing";startSync()}else syncState="off";
+    refreshAccount();
+  });
+}
+function loginErr(e){const c=e&&e.code;return c==="auth/unauthorized-domain"?"Este endereço ainda não está autorizado no Firebase.":c==="auth/network-request-failed"?"Sem internet. Tente de novo conectado.":"Não consegui entrar com o Google. Tente de novo."}
+async function doLogin(){
+  if(!fbReady){toast("Conecte à internet para entrar.");return}
+  const p=new firebase.auth.GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});
+  try{await firebase.auth().signInWithPopup(p);toast("Conectado. Suas operações agora ficam salvas na nuvem.")}
+  catch(e){
+    if(e.code==="auth/popup-blocked"||e.code==="auth/operation-not-supported-in-this-environment")return firebase.auth().signInWithRedirect(p);
+    if(e.code!=="auth/popup-closed-by-user"&&e.code!=="auth/cancelled-popup-request")toast(loginErr(e));
+  }
+}
+function persistLocal(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}}
+function markSynced(){syncState="ok";lastSync=Date.now();persistLocal();refreshAccount()}
+function applyRemote(r){
+  const keep={view:S.view,tripId:S.tripId,tab:S.tab,hideDone:S.hideDone};
+  S=Object.assign({open:{}},r,keep,{owner:fbUser.uid});
+  if(S.tripId&&!S.trips.find(t=>t.id===S.tripId)){S.view="agenda";S.tripId=null}
+  persistLocal();
+  const a=document.activeElement;if(!(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)))render();
+}
+async function startSync(){
+  const uid=fbUser.uid,ref=fbDb.collection("users").doc(uid);
+  let snap;try{snap=await ref.get()}catch(e){syncState=navigator.onLine?"error":"offline";refreshAccount();return}
+  if(!fbUser||fbUser.uid!==uid)return;
+  const remote=snap.exists?safeParse(snap.data().data):null;
+  if(!remote)await pushNow();
+  else if(!S.owner){const ids=new Set(remote.trips.map(t=>t.id));applyRemote(Object.assign({},remote,{trips:remote.trips.concat(S.trips.filter(t=>!ids.has(t.id)))}));await pushNow()}
+  else if(S.owner!==uid)applyRemote(remote),markSynced();
+  else if((remote.updatedAt||0)>(S.updatedAt||0))applyRemote(remote),markSynced();
+  else if((remote.updatedAt||0)<(S.updatedAt||0))await pushNow();
+  else markSynced();
+  unsubCloud=ref.onSnapshot(s=>{
+    if(!s.exists||s.metadata.hasPendingWrites)return;
+    const r=safeParse(s.data().data);
+    if(r&&(r.updatedAt||0)>(S.updatedAt||0)){applyRemote(r);toast("Atualizado com outro aparelho")}
+    markSynced();
+  },()=>{syncState="error";refreshAccount()});
+}
+function schedulePush(){try{if(!fbUser||!fbReady)return;syncState=navigator.onLine?"syncing":"offline";refreshAccount();clearTimeout(pushTimer);pushTimer=setTimeout(pushNow,1200)}catch(e){}}
+async function pushNow(){
+  if(!fbUser)return;S.owner=fbUser.uid;const d=cloudData();
+  try{await fbDb.collection("users").doc(fbUser.uid).set({data:JSON.stringify(d),updatedAt:d.updatedAt||Date.now(),email:fbUser.email||""});markSynced()}
+  catch(e){syncState=navigator.onLine?"error":"offline";persistLocal();refreshAccount()}
+}
+addEventListener("online",()=>{if(fbUser&&syncState!=="ok")pushNow()});
+function chipLabel(){try{if(fbUser){const n=esc((fbUser.displayName||"Conta").split(" ")[0]);return fbUser.photoURL?`<img src="${esc(fbUser.photoURL)}" alt="" referrerpolicy="no-referrer">${n}`:n}}catch(e){}return "Entrar"}
+function accountHTML(){
+  if(!PWA)return "";
+  if(!fbUser){
+    if(syncState==="unavailable")return `<div class="acct"><span>Para entrar com o Google, abra o app conectado à internet.</span></div>`;
+    return `<div class="acct"><div><b>Salve na nuvem</b><span>Entre com sua conta Google para não perder suas operações e usar em outros aparelhos.</span></div><button class="gbtn" data-act="login">${GLOGO}Entrar com Google</button><span class="fine">Suas operações ficam guardadas no Firebase (Google), ligadas à sua conta. Só você tem acesso.</span></div>`;
+  }
+  const hora=lastSync?new Date(lastSync).toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}):"";
+  const st={ok:`Sincronizado${hora?" às "+hora:""}`,syncing:"Sincronizando…",offline:"Sem internet. Sincroniza quando a conexão voltar.",error:"Não consegui sincronizar. Tento de novo na próxima alteração."}[syncState]||"";
+  const ini=esc((fbUser.displayName||fbUser.email||"?")[0].toUpperCase());
+  return `<div class="acct in"><div class="who">${fbUser.photoURL?`<img src="${esc(fbUser.photoURL)}" alt="" referrerpolicy="no-referrer">`:`<span class="ini">${ini}</span>`}<div><b>${esc(fbUser.displayName||"Conta Google")}</b><span>${esc(fbUser.email||"")}</span></div></div><div class="sync ${syncState}">${st}</div><button class="chip" data-act="logout">Sair da conta</button></div>`;
+}
+function refreshAccount(){const c=document.getElementById("acctChip");if(c)c.innerHTML=chipLabel();if(drawerOpen)renderDrawer()}
 let pendingLeave=null;
 function leavingDraft(next){
   const t=S.view==="trip"&&trip();if(!t||!t.draft)return false;
@@ -620,6 +715,7 @@ function renderDrawer(){
   const aRealizar=next.reduce((a,t)=>a+calc(t.cost).total,0);
   drawer.innerHTML=`<div class="in">
    <header><h2>Viagens</h2><button class="x" data-act="closeDrawer" aria-label="Fechar">×</button></header>
+   ${accountHTML()}
    <div class="totals">
     <div><span>Previsto ${y}</span><b>${brl(prevAno)}</b></div>
     <div><span>Realizado ${y}</span><b>${brl(realAno)}</b></div>
@@ -776,6 +872,7 @@ if(PWA){
   }
   try{navigator.storage?.persist?.()}catch(e){}
 }
+initCloud();
 render();
 </script>
 </body>

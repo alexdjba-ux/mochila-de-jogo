@@ -1,6 +1,6 @@
 // Mochila de Jogo: funciona sem internet.
 // Ao publicar uma nova versão, aumente o número abaixo.
-const VERSAO = "mochila-v5";
+const VERSAO = "mochila-v6";
 const ARQUIVOS = ["./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 
@@ -20,7 +20,8 @@ self.addEventListener("fetch", e => {
   const url = new URL(req.url);
 
   // Fontes do Google: guarda na primeira vez que abrir com internet
-  if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
+  if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com" ||
+      (url.hostname === "www.gstatic.com" && url.pathname.startsWith("/firebasejs/"))) {
     e.respondWith(caches.open("mochila-fontes").then(async c => {
       const hit = await c.match(req);
       if (hit) return hit;
