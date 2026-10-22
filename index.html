@@ -190,6 +190,22 @@ nav.bottom button[aria-current="true"]{color:var(--accent);background:var(--soft
 .acct .who .ini{display:grid;place-items:center;background:var(--soft);font-family:var(--cond);font-weight:700;color:var(--fg);font-size:1.1rem}
 .sync{font-size:.85rem;color:var(--accent)}.sync.syncing,.sync.offline{color:var(--muted)}.sync.error{color:var(--tag)}
 .acct.in .chip{justify-self:start}
+.gate{min-height:78vh;display:grid;place-items:center;text-align:center}
+.gate-in{position:relative;overflow:hidden;width:100%;max-width:380px;display:grid;gap:14px;justify-items:center;padding:44px 22px 36px;border:1px solid #2c2c30;border-radius:6px;background:linear-gradient(165deg,#26262a 0%,#0c0c0e 38%,#020203 62%,#111114 100%)}
+.gate-in::before{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,rgba(255,255,255,0) 30%,rgba(255,255,255,.10) 42%,rgba(255,255,255,.02) 50%,rgba(255,255,255,0) 58%)}
+.gate-in>*{position:relative}
+.gate h1{color:#f6f7ef;font-size:2.5rem}
+.gate .eyebrow{font-family:var(--cond);font-weight:600;font-size:.85rem;letter-spacing:.16em;text-transform:uppercase;color:#d9dfc6}
+#gateLogin{display:grid;gap:12px;justify-items:center;width:100%;margin-top:14px}
+.gate-msg{color:var(--muted)}
+.gate-fine{color:var(--muted);font-size:.78rem;line-height:1.4;max-width:300px}
+.ops{display:flex;flex-wrap:wrap;gap:6px}
+.opchip{display:inline-flex;align-items:center;gap:2px;background:var(--soft);border:1px solid var(--line);border-radius:999px;padding:4px 2px 4px 12px;font-size:.92rem}
+.opchip button{background:none;border:0;color:var(--muted);font-size:1.15rem;line-height:1;padding:0 8px}
+.opchip button:hover{color:var(--tag)}
+.opadd{display:flex;gap:8px;margin-top:8px}
+.opadd input{flex:1;min-width:0;font:inherit;font-size:16px;padding:9px 10px;border:1px solid var(--line);border-radius:3px;background:var(--bg);color:var(--fg)}
+.opadd button{font-family:var(--cond);font-weight:700;letter-spacing:.05em;text-transform:uppercase;background:var(--accent);color:var(--accent-fg);border:0;border-radius:3px;padding:0 14px}
 .gisbtn{min-height:44px;display:flex;justify-content:center}
 .linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:.82rem;justify-self:center;padding:2px}
 .hero .acctchip{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:6px;font-family:var(--cond);font-weight:700;font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;background:rgba(14,17,10,.5);color:#f4f6ec;border:1px solid rgba(230,234,219,.35);border-radius:3px;padding:5px 9px;max-width:45%;overflow:hidden;white-space:nowrap}
@@ -289,7 +305,20 @@ function whenPill(d){
 function dateBlock(s){const d=parseD(s);return d?`<div class="date"><b>${String(d.getDate()).padStart(2,"0")}</b><span>${MES[d.getMonth()]}</span></div>`:`<div class="date"><b>--</b><span>DATA</span></div>`}
 
 const app=document.getElementById("app");
+function needGate(){return PWA&&!fbUser&&!(syncState==="unavailable"&&S.owner)}
+function opsChips(t){const o=t.operators||[];return o.length?o.map((n,i)=>`<span class="opchip">${esc(n)}<button type="button" data-delop="${i}" aria-label="Remover ${esc(n)}">×</button></span>`).join(""):`<span class="note" style="margin:0">Nenhum operador adicionado.</span>`}
+function renderGate(){
+  closeDrawer();document.querySelector("nav.bottom").hidden=true;
+  let login;
+  if(syncState==="unavailable")login=`<span class="gate-msg">Sem internet. Conecte-se para entrar com sua conta Google.</span><button class="chip" data-act="reload">Tentar de novo</button>`;
+  else if(!authKnown)login=`<span class="gate-msg">Carregando…</span>`;
+  else login=(gisReady?`<div id="gisBtn" class="gisbtn"></div><button class="linkbtn" data-act="login">Não funcionou? Tentar outra forma de entrar</button>`:`<button class="gbtn" data-act="login">${GLOGO}Entrar com Google</button>`)+`<span class="gate-fine">Suas operações ficam guardadas no Firebase (Google), ligadas à sua conta. Só você tem acesso.</span>`;
+  app.innerHTML=`<section class="gate"><div class="gate-in"><span class="eyebrow">Airsoft · Operações</span><h1>Mochila de Jogo</h1><div id="gateLogin">${login}</div></div></section>`;
+  renderGisBtn();
+}
 function render(){
+  if(needGate()){renderGate();return}
+  document.querySelector("nav.bottom").hidden=false;
   document.getElementById("nav-agenda").setAttribute("aria-current",S.view!=="template");
   document.getElementById("nav-template").setAttribute("aria-current",S.view==="template");
   if(S.view==="trip"&&trip())renderTrip();else if(S.view==="template")renderTemplate();else if(S.view==="dist")renderDist();else if(S.view==="hotel")renderHotel();else{S.view="agenda";renderAgenda()}
@@ -494,6 +523,7 @@ function resumo(t){
     t.field||t.city?`📍 ${[t.field,t.city].filter(Boolean).join(" - ")}`:"",
     c.transp?`🚗 Transporte: ${brl(c.transp)} total, ${brl(c.porPessoa)} por pessoa (${c.pes})`:"",
     numDec(t.cost.taxa)?`🎟️ Taxa do campo: ${brl(numDec(t.cost.taxa))}`:"",
+    t.operators&&t.operators.length?`👥 Operadores: ${t.operators.join(", ")}`:"",
     t.notes?`📝 ${t.notes}`:""].filter(Boolean).join("\n");
 }
 
@@ -504,9 +534,11 @@ function detailsHTML(t){
     <div class="f full"><label for="d-city">Cidade / endereço</label><input class="txt" id="d-city" data-info="city" value="${esc(t.city)}" maxlength="100"></div>
     <div class="f"><label for="d-date">Data</label><input class="txt" type="date" id="d-date" data-info="date" value="${esc(t.date)}"></div>
     <div class="f"><label for="d-time">Horário</label><input class="txt" type="time" id="d-time" data-info="time" value="${esc(t.time)}"></div>
+    <div class="f full"><label for="op-new">Operadores na viagem</label><div class="ops" id="opsList">${opsChips(t)}</div>
+     <form class="opadd" data-addop="1"><input id="op-new" placeholder="Nome ou apelido do operador" maxlength="40" autocomplete="off" aria-label="Nome do operador"><button>Adicionar</button></form></div>
     <div class="f full"><label for="d-notes">Observações</label><textarea id="d-notes" data-info="notes" rows="4" placeholder="Regras de FPS, ponto de encontro, quem vai de carona…">${esc(t.notes)}</textarea></div>
    </div></div>
-   <div class="danger-zone"><div class="row"><button class="chip" data-act="dup">Duplicar jogo</button><button class="chip" data-act="delTrip">Excluir operação</button></div>
+   <div class="danger-zone"><div class="row"><button class="chip" data-act="dup">Duplicar operação</button><button class="chip" data-act="delTrip">Excluir operação</button></div>
    <div class="row" id="delConfirm" hidden style="margin-top:10px">Excluir esta operação, com checklist e custos? <button class="chip danger" data-act="delYes">Excluir</button><button class="chip" data-act="delNo">Cancelar</button></div></div>`;
 }
 
@@ -535,6 +567,7 @@ function go(view,extra){Object.assign(S,{view},extra||{});save();render();window
 document.addEventListener("click",e=>{
   const b=e.target.closest("button");if(!b)return;
   if(b.dataset.nav){if(leavingDraft(()=>go(b.dataset.nav)))return;return go(b.dataset.nav)}
+  if(b.dataset.delop!==undefined){const t=trip();if(t&&t.operators){t.operators.splice(+b.dataset.delop,1);save();document.getElementById("opsList").innerHTML=opsChips(t)}return}
   if(b.dataset.delask){document.querySelectorAll(".vconfirm").forEach(c=>c.hidden=true);document.querySelector("#vw-"+b.dataset.delask+" .vconfirm").hidden=false;return}
   if(b.dataset.delno){document.querySelector("#vw-"+b.dataset.delno+" .vconfirm").hidden=true;return}
   if(b.dataset.delyes){const id=b.dataset.delyes,t=S.trips.find(x=>x.id===id);S.trips=S.trips.filter(x=>x.id!==id);if(S.tripId===id)S.tripId=null;save();toast(`"${t&&t.name||"Operação"}" excluída`);return render()}
@@ -554,6 +587,7 @@ document.addEventListener("click",e=>{
     case "stay":pendingLeave=null;return show("leaveConfirm",0);
     case "drawer":return openDrawer();
     case "closeDrawer":return closeDrawer();
+    case "reload":return location.reload();
     case "login":return doLogin();
     case "logout":try{google.accounts.id.disableAutoSelect()}catch(e){}return firebase.auth().signOut().then(()=>toast("Você saiu da conta. As operações continuam neste aparelho."));
     case "tool":{closeDrawer();const from=b.dataset.from==="trip"?S.tripId:null;return go(b.dataset.tool,{toolTrip:from,distRes:null,distDest:undefined,hotelCity:undefined,hotelIn:undefined,hotelN:undefined,hotelP:undefined})}
@@ -605,7 +639,7 @@ let installEvt=null;
 /* ===== conta Google + nuvem (Firebase), só no app instalado ===== */
 var FB_CONFIG={apiKey:["AIzaSyAwSfaI8S","_Fa26K9yEiSDJ8Wkva8jbOCo8"].join(""),authDomain:"app-airsoft-ed854.firebaseapp.com",projectId:"app-airsoft-ed854",storageBucket:"app-airsoft-ed854.firebasestorage.app",messagingSenderId:"226930504989",appId:"1:226930504989:web:f207cb20d7c4aaf53c5df4"};
 var FB_VER="10.12.2",fbUser=null,fbDb=null,fbReady=false,syncState="off",lastSync=0,pushTimer=null,unsubCloud=null;
-var GCID="226930504989-lgjo3i4ge4mrgd54jj83htsrvm8sro1p.apps.googleusercontent.com",gisReady=false;
+var GCID="226930504989-lgjo3i4ge4mrgd54jj83htsrvm8sro1p.apps.googleusercontent.com",gisReady=false,authKnown=false;
 var GLOGO=`<svg width="18" height="18" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.6 5.4 2.7 13.3l7.9 6.1C12.5 13.6 17.8 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 7l7.2 5.6c4.2-3.9 7.1-9.6 7.1-17.1z"/><path fill="#FBBC05" d="M10.6 28.6c-.5-1.4-.8-3-.8-4.6s.3-3.2.8-4.6l-7.9-6.1C1 16.6 0 20.2 0 24s1 7.4 2.7 10.7l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.2-5.6c-2 1.4-4.7 2.3-8.7 2.3-6.2 0-11.5-4.1-13.4-9.9l-7.9 6.1C6.6 42.6 14.6 48 24 48z"/></svg>`;
 function loadScript(src){return new Promise((res,rej)=>{const s=document.createElement("script");s.src=src;s.onload=res;s.onerror=rej;document.head.append(s)})}
 const safeParse=t=>{try{const d=JSON.parse(t);return d&&Array.isArray(d.trips)&&Array.isArray(d.template)?d:null}catch(e){return null}};
@@ -621,7 +655,7 @@ async function initCloud(){
   loadScript("https://accounts.google.com/gsi/client").then(()=>{google.accounts.id.initialize({client_id:GCID,callback:onGisCredential,auto_select:false,cancel_on_tap_outside:true,use_fedcm_for_prompt:true,itp_support:true});gisReady=true;refreshAccount()}).catch(()=>{});
   firebase.auth().getRedirectResult().catch(e=>toast(loginErr(e)));
   firebase.auth().onAuthStateChanged(u=>{
-    fbUser=u;if(unsubCloud){unsubCloud();unsubCloud=null}
+    fbUser=u;authKnown=true;if(unsubCloud){unsubCloud();unsubCloud=null}
     if(u){syncState="syncing";startSync()}else syncState="off";
     refreshAccount();
   });
@@ -684,7 +718,7 @@ function accountHTML(){
   const ini=esc((fbUser.displayName||fbUser.email||"?")[0].toUpperCase());
   return `<div class="acct in"><div class="who">${fbUser.photoURL?`<img src="${esc(fbUser.photoURL)}" alt="" referrerpolicy="no-referrer">`:`<span class="ini">${ini}</span>`}<div><b>${esc(fbUser.displayName||"Conta Google")}</b><span>${esc(fbUser.email||"")}</span></div></div><div class="sync ${syncState}">${st}</div><button class="chip" data-act="logout">Sair da conta</button></div>`;
 }
-function refreshAccount(){const c=document.getElementById("acctChip");if(c)c.innerHTML=chipLabel();if(drawerOpen)renderDrawer()}
+function refreshAccount(){if(needGate()||document.getElementById("gateLogin")){render();return}const c=document.getElementById("acctChip");if(c)c.innerHTML=chipLabel();if(drawerOpen)renderDrawer()}
 let pendingLeave=null;
 function leavingDraft(next){
   const t=S.view==="trip"&&trip();if(!t||!t.draft)return false;
@@ -707,7 +741,7 @@ function vrow(t,past){
   if(!past)vl=`${prev?brl(prev):"—"}<small>previsto</small>`;
   else if(hasReal(t))vl=`${brl(real)}<small class="${df>0.005?"over":"under"}">${Math.abs(df)<0.005?"igual ao previsto":(df>0?"+":"−")+brl(Math.abs(df))}</small>`;
   else vl=`${prev?brl(prev):"—"}<small class="over">anotar gasto</small>`;
-  return `<div class="vwrap" id="vw-${t.id}"><div class="vline"><button class="vrow" data-open="${t.id}" data-tab2="${past?"cost":"check"}"><span class="dt">${dt}</span><span class="nm"><b>${esc(t.name)||"Sem nome"}</b><small>${esc(t.city||t.field||"")}${past?` · previsto ${brl(prev)}`:""}</small></span><span class="vl">${vl}</span></button><button class="vdel" data-delask="${t.id}" aria-label="Excluir ${esc(t.name)||"operação"}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button></div><div class="vconfirm" hidden><span>Excluir <b>${esc(t.name)||"esta operação"}</b>? O checklist e os custos dela também serão apagados.</span><div class="row"><button class="chip danger" data-delyes="${t.id}">Excluir</button><button class="chip" data-delno="${t.id}">Cancelar</button></div></div></div>`;
+  return `<div class="vwrap" id="vw-${t.id}"><div class="vline"><button class="vrow" data-open="${t.id}" data-tab2="${past?"cost":"check"}"><span class="dt">${dt}</span><span class="nm"><b>${esc(t.name)||"Sem nome"}</b><small>${esc(t.city||t.field||"")}${(t.operators||[]).length?`${t.city||t.field?" · ":""}${t.operators.length} ${t.operators.length>1?"operadores":"operador"}`:""}${past?` · previsto ${brl(prev)}`:""}</small></span><span class="vl">${vl}</span></button><button class="vdel" data-delask="${t.id}" aria-label="Excluir ${esc(t.name)||"operação"}"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/></svg></button></div><div class="vconfirm" hidden><span>Excluir <b>${esc(t.name)||"esta operação"}</b>? O checklist e os custos dela também serão apagados.</span><div class="row"><button class="chip danger" data-delyes="${t.id}">Excluir</button><button class="chip" data-delno="${t.id}">Cancelar</button></div></div></div>`;
 }
 function renderDrawer(){
   const y=new Date().getFullYear();
@@ -855,6 +889,7 @@ document.addEventListener("focusout",e=>{if(e.target.dataset?.info==="date"||e.t
 document.addEventListener("submit",e=>{
   e.preventDefault();const f=e.target,inp=f.querySelector("input"),v=inp.value.trim();if(!v)return;
   if(f.dataset.additem){trip().items.push({id:uid(),cat:f.dataset.additem,label:v,note:"",crit:false,done:false});save();renderTrip();updateProgress();document.getElementById("add-"+f.dataset.additem)?.focus()}
+  if(f.dataset.addop){const t=trip();if(!t)return;t.operators=t.operators||[];if(!t.operators.some(x=>x.toLowerCase()===v.toLowerCase()))t.operators.push(v);inp.value="";save();document.getElementById("opsList").innerHTML=opsChips(t);inp.focus();return}
   if(f.dataset.tadd){S.template.find(c=>c.id===f.dataset.tadd).items.push({id:uid(),label:v,note:"",crit:false});save();renderTemplate();document.getElementById("tadd-"+f.dataset.tadd)?.focus()}
 });
 document.addEventListener("toggle",e=>{

@@ -1,6 +1,6 @@
 // Mochila de Jogo: funciona sem internet.
 // Ao publicar uma nova versão, aumente o número abaixo.
-const VERSAO = "mochila-v7";
+const VERSAO = "mochila-v8";
 const ARQUIVOS = ["./", "./index.html", "./manifest.webmanifest",
   "./icons/icon-192.png", "./icons/icon-512.png", "./icons/apple-touch-icon.png"];
 
