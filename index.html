@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Wartrip</title>
+<title>AIRTRIP</title>
 <meta name="description" content="Agenda de jogos, checklist da mochila e custos de viagem para jogadores de airsoft.">
 <meta name="theme-color" content="#09090a" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#171a13" media="(prefers-color-scheme: dark)">
@@ -13,7 +13,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="Wartrip">
+<meta name="apple-mobile-web-app-title" content="AIRTRIP">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Stencil+One&family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap">
 <style>
 /* Layout: coluna estreita tipo prancheta; agenda de jogos -> ficha do jogo (checklist, custos, detalhes); barra inferior fixa */
@@ -60,6 +60,9 @@ h2.sec{font-family:var(--cond);font-weight:700;font-size:1rem;letter-spacing:.1e
 .hero .eyebrow{font-family:var(--cond);font-weight:600;font-size:.85rem;letter-spacing:.16em;text-transform:uppercase;color:#d9dfc6}
 .logo{display:block;width:62px;height:62px;filter:drop-shadow(0 2px 8px rgba(0,0,0,.6))}
 .gate-in .logo{width:72px;height:72px;margin-bottom:-4px}
+.brandlogo{display:block;width:190px;height:auto;max-width:70vw;filter:drop-shadow(0 6px 18px rgba(0,0,0,.6))}
+.gate-in .brandlogo{width:250px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 .hero .lead{color:#e6eadb;margin:0;text-shadow:0 1px 6px rgba(0,0,0,.6)}
 .hero .cta{margin-top:10px;font-family:var(--cond);font-weight:700;font-size:1.25rem;letter-spacing:.1em;text-transform:uppercase;background:#c47a16;color:#fff8ec;border:0;border-radius:4px;padding:14px 30px;box-shadow:0 4px 14px rgba(0,0,0,.35);transition:transform .15s,background .15s}
 .hero .cta:hover{background:#d4861c}
@@ -321,7 +324,7 @@ function renderGate(){
   if(syncState==="unavailable")login=`<span class="gate-msg">Sem internet. Conecte-se para entrar com sua conta Google.</span><button class="chip" data-act="reload">Tentar de novo</button>`;
   else if(!authKnown)login=`<span class="gate-msg">Carregando…</span>`;
   else login=(gisReady?`<div id="gisBtn" class="gisbtn"></div><button class="linkbtn" data-act="login">Não funcionou? Tentar outra forma de entrar</button>`:`<button class="gbtn" data-act="login">${GLOGO}Entrar com Google</button>`)+`<span class="gate-fine">Suas operações ficam guardadas no Firebase (Google), ligadas à sua conta. Só você tem acesso.</span>`;
-  app.innerHTML=`<section class="gate"><div class="gate-in"><svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><use href="#wtlogo"/></svg><span class="eyebrow">Airsoft · Operações</span><h1>Wartrip</h1><div id="gateLogin">${login}</div></div></section>`;
+  app.innerHTML=`<section class="gate"><div class="gate-in"><img class="brandlogo" src="logo.webp" alt="AIRTRIP — Viagens de Airsoft" width="250" height="250"><h1 class="sr">AIRTRIP</h1><div id="gateLogin">${login}</div></div></section>`;
   renderGisBtn();
 }
 function render(){
@@ -349,9 +352,8 @@ function renderAgenda(){
   const yearCost=past.concat(next).filter(t=>parseD(t.date)?.getFullYear()===new Date().getFullYear()).reduce((a,t)=>a+calc(t.cost).total,0);
   app.innerHTML=`<section class="hero piano" id="hero">
     <button class="menu" data-act="drawer" aria-label="Abrir lista de viagens"><i></i>Viagens</button>${PWA?`<button class="acctchip" id="acctChip" data-act="drawer" aria-label="Conta Google">${chipLabel()}</button>`:""}
-    <svg class="logo" viewBox="0 0 64 64" aria-hidden="true"><use href="#wtlogo"/></svg>
-    <span class="eyebrow">Airsoft · Operações</span>
-    <h1>Wartrip</h1>
+    <img class="brandlogo" src="logo.webp" alt="AIRTRIP — Viagens de Airsoft" width="190" height="190">
+    <h1 class="sr">AIRTRIP</h1>
     <p class="lead">${next.length?`${next.length} ${next.length>1?"operações marcadas":"operação marcada"}`:"Nenhuma operação marcada"}</p>
     <button class="cta" data-act="new">+ Nova Operação</button>
    </section>
@@ -633,7 +635,7 @@ function showData(txt){const ta=document.createElement("textarea");ta.value=txt;
 let pendingImport=null;
 function askImport(txt){
   let d;try{d=JSON.parse(String(txt).trim())}catch(e){return toast("Não reconheci esses dados. Cole o texto completo do backup.")}
-  if(!d||!Array.isArray(d.trips)||!Array.isArray(d.template))return toast("Esse texto não é um backup do Wartrip.");
+  if(!d||!Array.isArray(d.trips)||!Array.isArray(d.template))return toast("Esse texto não é um backup do AIRTRIP.");
   pendingImport={template:d.template,trips:d.trips,open:d.open||{}};
   document.getElementById("importInfo").textContent=`Backup com ${d.trips.length} ${d.trips.length===1?"jogo":"jogos"}. Substituir os dados atuais?`;
   const el=document.getElementById("importConfirm");el.hidden=false;el.scrollIntoView({block:"center"});
@@ -641,7 +643,7 @@ function askImport(txt){
 async function exportBackup(){
   const name="mochila-de-jogo-backup-"+isoPlus(0)+".json";
   const file=new File([backupText()],name,{type:"application/json"});
-  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"Backup Wartrip"});return}}catch(e){if(e.name==="AbortError")return}
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:"Backup AIRTRIP"});return}}catch(e){if(e.name==="AbortError")return}
   const a=document.createElement("a");a.href=URL.createObjectURL(file);a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(a.href),4000);toast("Backup salvo em Downloads");
 }
 document.addEventListener("change",e=>{if(e.target.id==="importFile"&&e.target.files[0]){e.target.files[0].text().then(askImport);e.target.value=""}});
